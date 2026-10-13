@@ -2,7 +2,7 @@
 
 **Status:** Draft baseline for review; not authorization to implement or launch  
 **Updated:** 2026-10-13  
-**Source:** Confirmed business-design decisions from four design rounds and subsequent MVP scope revision.
+**Source:** Confirmed business-design decisions from four design rounds, subsequent MVP scope revision and owner-approved review defaults (DECISIONS B23–B31, 2026-10-13). Documentation approval is not implementation authorization.
 
 ## 1. Purpose and success criterion
 
@@ -15,7 +15,7 @@ LISI BNB ERP supports one café/kitchen serving customers at the café and padel
 ### Customer and counter ordering
 - Responsive web experience for customers, employees and owner; no dedicated native app required for MVP.
 - Court-specific QR codes open the ordering website and preselect the court; customers can change the selected location.
-- Support court delivery, café pickup and dine-in. Details of dine-in location identification remain open.
+- Support court delivery, café pickup and dine-in; use order-specific pickup codes, numbered dine-in tables and explicit building/court confirmation. Directory and handoff details remain open.
 - Guest checkout; customer accounts are not required.
 - Support both QR self-ordering and employee-entered counter orders.
 - Menu browsing, cart, checkout, and order status are part of the operational ordering flow.
@@ -23,33 +23,49 @@ LISI BNB ERP supports one café/kitchen serving customers at the café and padel
 ### Payments
 - **Verified payment is a prerequisite for kitchen preparation.** Do not trust a customer screenshot or customer assertion as proof of payment.
 - The desired customer experience is: scan ordering QR, choose products, then view/save a separate payment QR (possibly QRIS paid through BCA/myBCA). Merchant/provider and integration capabilities are **not confirmed**.
-- Paid orders appear automatically in the preparation queue after trustworthy verification.
-- Payment provider, QR generation, webhook/API access, settlement, expiration, refunds and staff-entered payment procedures remain open; no production payment implementation may be assumed.
+- MVP accepts QRIS only, including counter orders, conditional on trusted automatic verification; cash/EDC are deferred.
+- Eligible paid orders appear automatically in preparation after trustworthy verification. Late payments on canceled/expired orders require supervisor review, defaulting to refund rather than automatic preparation; extra verified duplicate payments are refunded without duplicate fulfillment.
+- Payment provider, QR generation, webhook/API access, settlement, expiration mechanics and refund execution remain open; no production payment implementation may be assumed.
+
+### Demo-first payment development — confirmed B32
+- Use simulated payments for development/testing in non-production while merchant selection is pending. This unblocks provider-independent work; other affected-module decisions still need approval.
+- Keep the payment-provider integration replaceable, with shared server-side order/payment rules. Demo controls supply simulated provider outcomes through that processing boundary rather than bypassing business rules.
+- Clearly label demo payment displays and transaction history as simulated; do not present a payable QR or real merchant receipt. Isolate demo records from production orders, payment evidence and financial reports.
+- Production must reject demo configuration, controls and simulated evidence. Missing or invalid real-provider configuration must leave payment acceptance unavailable, never fall back to demo.
+- Real provider capabilities, authentication, transaction matching, reconciliation and refund procedures must be validated before a real-money pilot. Demo success does not establish provider compatibility or eliminate integration/testing work.
 
 ### Employees and fulfillment
 - Preparation and delivery are separate roles; multiple staff members may perform either role, and users may be authorized for multiple roles.
 - Preparation queue is shared; staff claim orders themselves.
 - Court orders marked ready enter a shared delivery queue; delivery staff claim, collect and deliver them.
 - Pickup and dine-in orders use a ready/handoff path rather than a court-delivery queue.
-- Staff can pause services and adjust displayed wait estimates. Exact permissions, scope of pause and wait-time rules are open.
-- Only designated supervisors and owners can authorize cancellations and refunds. Exact timing and procedures are open.
+- Preparation staff may pause the kitchen; supervisors manage service pauses. Staff can adjust displayed wait estimates; their permissions and pause/pending-payment effects remain open.
+- Only supervisors/owners release or reassign claimed work after checking physical progress. No automatic claim expiry; previous assignees cannot continue acting after reassignment.
+- Unpaid orders may be canceled. Paid cancellation/refund requires supervisor/owner approval; full cancellation is normally allowed before preparation, with individual exception review afterward. Partial refunds are deferred; uncertain refund results remain pending reconciliation before retry.
 - Preparation staff and owner can change product availability.
+- Recheck availability at checkout and freeze agreed prices. If fulfillment becomes impossible after payment, a supervisor resolves it through a full refund and replacement-order offer. Substitutions and partial fulfillment are deferred.
+- Absent court customers trigger failed-delivery recording, an attempt through the agreed contact method and return to café; not automatic completion. Contact details and final resolution remain open.
 - Staff receive live dashboard updates with audible and visual new-order alerts.
 
 ### Management and reporting
 - Owner dashboard prioritizes today's revenue, order count, best-selling products and order history.
-- Role-based access distinguishes preparation, delivery, supervisor and owner permissions; a detailed access matrix still needs approval.
+- Designated counter staff enter orders; preparation staff control availability/kitchen pauses; supervisors manage service pauses, reassignment and destination corrections; owners control prices, accounts and financial reporting. Use individual accounts on shared devices and server-side authorization; the complete matrix still needs approval.
+- Reports use Asia/Jakarta midnight-to-midnight: verified payments received, confirmed refunds issued and their difference are separate from merchant settlement. Count unique paid orders, not duplicate payments; remaining revenue/best-seller rules are open.
 - Maintain transaction history sufficient for accurate basic reporting and future inventory/accounting additions.
 
 ### Outage operations
 - If website/internet fails, employees switch to a separate manual order log and existing merchant payment tools, then reconcile when service returns.
 - Manual records must be distinguished from online orders to avoid double counting; only verified merchant payments may be recorded as paid.
+- Accept new manual orders only when official merchant records can verify payment; otherwise stop new orders and continue already verified work. A designated supervisor numbers manual records, resolves overlaps and approves return online.
+- Recovery target: digital service within one hour, with no permanent loss of paid-order details. Feasibility must be demonstrated through drills; recovery design and other data-loss tolerances remain open.
 
 ## 3. Initial MVP boundary — latest decision supersedes Round 4
 
 **IN MVP:** Ordering, trustworthy payment verification, kitchen and delivery operations, pickup/dine-in handoff, menu/product availability, staff roles, service controls, basic sales reporting, notifications, outage fallback and reconciliation.
 
 **AFTER MVP PILOT/STABILIZATION:** Advanced inventory (ingredient-level stock, recipes, automatic consumption, waste, restocking, stock alerts) and advanced accounting (bookkeeping/general ledger, COGS, financial statements, detailed expense management). These are **explicitly deferred**, superseding the Round 4 answer to include them in the first release. Preserve reliable order/payment/product records so later modules can be added without fabricating history.
+
+**Additional confirmed MVP deferrals:** Cash/EDC, partial refunds, substitutions and partial fulfillment (B23/B25/B29). Full refunds and duplicate-payment recovery remain essential.
 
 **Proposed exclusions, pending business validation:** Court booking, sports-club membership, payroll, loyalty, procurement automation, multi-kitchen/multi-branch management and advanced forecasting.
 
@@ -68,15 +84,15 @@ LISI BNB ERP supports one café/kitchen serving customers at the café and padel
 ## 6. Open decisions / launch blockers
 
 See `docs/DECISIONS.md` for the authoritative decision register. Especially important:
-1. Merchant/payment provider and supported programmatic confirmation method; treatment of staff-entered orders and cash/other tender.
-2. Court/building directory, QR placement, service coverage and dine-in/pickup identification.
-3. Exact menu variants, modifiers, prices, taxes, discounts and availability rules.
-4. Order/payment state transitions, edits, cancellations, partial fulfillment, refunds, duplicate payments and expiration.
-5. Employee roles, account lifecycle, claim/unclaim/reassignment, shift coverage and permissions.
+1. Real integration/pilot gate: merchant/payment provider and supported programmatic confirmation/refund methods for the QRIS-only MVP; outage verification/import evidence. Non-production demo development is permitted under B32 while merchant selection is pending.
+2. Court/building/table directory, QR placement, coverage, secure guest recovery and detailed pickup/delivery handoff.
+3. Exact menu variants/modifiers, prices/taxes/discounts, pending-payment availability and replacement-order handling.
+4. Exact order/payment transitions, edit limits, cancellation exceptions, refund execution, unknown outcomes and expiration mechanics under B24/B25/B29.
+5. Complete permission matrix, account/session lifecycle, physical reassignment checks and shift coverage under B26/B28.
 6. Pause behavior, estimated waits, order throttling and notification fallback.
-7. Reporting definitions, timezone, business-day cutoff, gross/net/refund metrics and reconciliation.
-8. Database, backups, optional Google Sheets **read-only reporting mirror**, infrastructure and monitoring.
-9. Manual-order ledger format, outage procedure and post-outage reconciliation.
+7. Remaining revenue/count/best-seller definitions and reconciliation under the confirmed Asia/Jakarta day and collection/refund displays.
+8. Recovery design/measurement and drills for B31, other RPOs, database/backups, infrastructure/monitoring and optional Google Sheets **read-only reporting mirror**.
+9. Manual ledger format, outage cutover, overlap resolution and post-outage reconciliation under B27.
 10. Privacy/security, retention, operating constraints and relevant Indonesian regulatory/provider requirements.
 
 ## 7. Change control
