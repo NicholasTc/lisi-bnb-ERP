@@ -200,3 +200,24 @@ If any requirement is not met, explicitly mark the task as incomplete or partial
 - Prefer actionable recommendations over vague suggestions.
 
 The goal is not to generate code as quickly as possible. The goal is to deliver reliable, maintainable software efficiently.
+
+## Core Engineering Principle — MVP First, Reliability Always
+
+LISI BNB ERP must prioritize delivering a small, reliable, production-ready operational MVP before introducing additional features.
+
+Follow these rules:
+
+1. Implement only features explicitly approved for the current milestone.
+2. Do not add speculative abstractions, integrations, or infrastructure for hypothetical future requirements.
+3. Keep the code modular and maintainable without prematurely introducing distributed services or unnecessary complexity.
+4. Never compromise payment integrity, transaction correctness, authentication, authorization, auditability, or recovery for simplicity.
+5. Prefer established, straightforward solutions over technically impressive but unnecessary alternatives.
+6. Every feature must have clear acceptance criteria and relevant automated tests.
+7. Complete and verify each milestone before beginning another.
+8. Do not implement advanced inventory, accounting, or other post-MVP features until the operational MVP has been tested and stabilized and the product owner explicitly approves expansion.
+9. When a proposed feature or technology increases complexity, explain its immediate business value, maintenance burden, and simpler alternatives before proceeding.
+10. If a requirement is ambiguous or conflicts with the approved MVP scope, request clarification instead of making assumptions.
+
+**Definition of success:** The café can consistently accept verified paid orders, prepare and fulfill them correctly, track essential transactions, and recover safely from operational failures.
+
+A smaller system that works reliably is more valuable than a feature-rich system that fails unpredictably.
