@@ -1,0 +1,35 @@
+name: lisi-foundation
+services:
+  db-dev:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_DB: lisi_dev
+      POSTGRES_USER: lisi_bootstrap
+      POSTGRES_PASSWORD: ${DEV_BOOTSTRAP_PASSWORD:?Run npm run local:setup first}
+      APP_DB_USER: lisi_dev
+      APP_DB_PASSWORD: ${DEV_DB_PASSWORD:?Run npm run local:setup first}
+    ports: ["127.0.0.1:55432:5432"]
+    volumes: ["dev-data-v2:/var/lib/postgresql/data", "./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/010-app-role.sql:ro"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lisi_dev -d lisi_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  db-test:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_DB: lisi_test
+      POSTGRES_USER: lisi_bootstrap
+      POSTGRES_PASSWORD: ${TEST_BOOTSTRAP_PASSWORD:?Run npm run local:setup first}
+      APP_DB_USER: lisi_test
+      APP_DB_PASSWORD: ${TEST_DB_PASSWORD:?Run npm run local:setup first}
+    ports: ["127.0.0.1:55433:5432"]
+    tmpfs: ["/var/lib/postgresql/data"]
+    volumes: ["./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/010-app-role.sql:ro"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lisi_test -d lisi_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  dev-data-v2:

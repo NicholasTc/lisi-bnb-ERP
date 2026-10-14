@@ -1,7 +1,7 @@
 # LISI BNB ERP — Decision Register
 
 **Status:** Living register. Use this document to resolve ambiguity; do not interpret proposals as approvals.  
-**Updated:** 2026-10-13
+**Updated:** 2026-10-14
 
 ## Status meanings
 
@@ -78,14 +78,22 @@
 - **CONFIRMED:** Demo-first non-production testing is approved (B32). Demo payment displays must be marked simulated/non-payable, and demo success is not evidence of actual QRIS payment or provider support.
 - **OPEN:** Provider verification evidence, settlement, expiration mechanics, refund execution/capabilities, fees, payout delays and provider outages. ERP import/manual-confirmation permissions and evidence checks are not yet specified.
 
-## Proposed design choices (not yet confirmed)
+## Technical foundation approval — 2026-10-14
+
+Product owner approved Milestone 1 implementation only: TypeScript/Next.js modular monolith, PostgreSQL, Drizzle, Tailwind, Vitest and Playwright; local Docker Compose development/test PostgreSQL. Better Auth is approved subject to configuration and executed security tests. See `decisions/001-foundation.md` for technical boundaries and `OPEN_QUESTIONS.md` for unresolved foundation/launch items.
+
+Confirmed employee policy: individual email/password accounts; no public registration; multiple roles; server-side default-deny authorization; database sessions; eight-hour absolute lifetime without extension; thirty-minute server-side inactivity expiry; immediate logout revocation; disabling revokes sessions. Provisioning is development/test only in this milestone. Payments are entirely disabled for Milestone 1.
+
+This approval supersedes earlier documentation-only authorization boundaries for Milestone 1, but does not approve business-rule implementation, later milestones, production systems or launch.
+
+## Design choice register
 
 | ID | Status | Proposal |
 |---|---|---|
 | P01 | PROPOSED | Separate payment and fulfillment state machines with explicit transitions. |
 | P02 | PROPOSED | Atomic enforcement mechanism remains subject to technical design; exclusive ownership is mandatory. Reassignment business policy is confirmed in B26. |
 | P03 | PROPOSED | Maintain immutable/append-only financial event history or equivalent auditable ledger of changes. |
-| P04 | PROPOSED | PostgreSQL as authoritative store; Google Sheets as optional read-only reporting mirror, not a writable second operational DB. **No database selected.** |
+| P04 | CONFIRMED IN PART | PostgreSQL is approved as authoritative store (2026-10-14). Google Sheets remains optional/deferred and read-only, not a writable second operational database. |
 | P05 | PROPOSED | Manual fallback records use unique identifiers and explicit reconciliation states. |
 | P06 | PROPOSED | Defer loyalty, court bookings, payroll, supplier automation, multi-location and forecasting. |
 
@@ -103,7 +111,7 @@
 | BLOCKER | O08 | B31 settles timezone/day boundary and collection/refund displays. Define revenue terminology, best-seller rules and treatment of canceled/refunded orders. Distinguish actual extra payments from duplicate notifications: extra money is traceable, not another sale. |
 | BLOCKER | O09 | What are operational failure thresholds, notification fallback and staff escalation paths? |
 | BLOCKER | O10 | What security/privacy/retention/provider obligations apply to the business in Indonesia? |
-| HIGH | O11 | Design and validate recovery for B31's one-hour target and no permanent loss of paid-order details. Define RPO for other records, timing boundaries and infrastructure alert ownership; database/hosting remain unselected and Sheets optional. |
+| HIGH | O11 | Design and validate recovery for B31's one-hour target and no permanent loss of paid-order details. Define other-record RPOs, timing boundaries, PostgreSQL backups and alert ownership; hosting remains unselected and Sheets optional. |
 | HIGH | O12 | Device/browser/network requirements, expected peak throughput and latency targets. |
 | BLOCKER | O13 | Secure guest order lookup/recovery, receipts and customer contact method; no customer account required. B30 pickup codes do not by themselves settle lookup authorization. |
 | BLOCKER | O14 | B26/B30 settle reassignment, no automatic expiry and absent-customer return. Define shift handoff, collection/completion checks, contact attempts, unattended orders and redelivery/refund resolution. |

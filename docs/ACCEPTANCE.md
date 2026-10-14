@@ -1,15 +1,27 @@
 # LISI BNB ERP — Acceptance Criteria and Launch Gates
 
 **Status:** Draft verification contract. Pass/fail criteria below include confirmed business requirements and proposed safety tests; detailed thresholds and expected edge-case policies remain OPEN.  
-**Updated:** 2026-10-13
+**Updated:** 2026-10-14
 
-B23–B31 in `DECISIONS.md` are owner-approved defaults. Criteria below translate them into verification requirements; open mechanisms/policies still need approval and no tests are claimed to have run.
+B23–B31 in `DECISIONS.md` are owner-approved defaults. Criteria below are verification requirements; open mechanisms/policies still need approval. Executed foundation evidence is recorded in `VERIFICATION.md`; later MVP workflows remain unverified.
 
 B32 approves demo-first payments in non-production while merchant selection is pending. Demo results can establish provider-independent behavior, but cannot pass real-provider or real-money pilot gates.
 
 ## 1. Test strategy
 
 Every critical workflow requires automated tests where practical plus realistic device/staff exercises. Passing compilation or a happy-path demo is **not acceptance**. Evidence must include test results, observed outcomes, known issues and the approving person.
+
+### Milestone 1 — Foundation gate (approved 2026-10-14)
+
+- Reproducible installation, development startup, production build/local startup, TypeScript and lint checks succeed.
+- Reviewed migrations apply to fresh isolated PostgreSQL and rerun without changes; constraints/rollback and wrong-target/marker rejection are tested.
+- Vitest unit/integration and Chromium Playwright tests execute successfully; authentication is tested through actual hashed credentials and persisted sessions.
+- Registration denial, current multiple roles, unauthorized access, origin protection, throttling, eight-hour non-refreshing expiry, thirty-minute idle expiry, logout and disabling/revocation pass.
+- Passive checks do not extend inactivity; expired sessions cannot be revived. Disabling and session creation are tested concurrently.
+- Database failure yields sanitized readiness failure and recovery; secrets/payment credentials are excluded and payments remain disabled.
+- No ordering/payment/dashboard or deferred features; `AGENTS.md` remains preserved. Production provisioning remains a launch blocker in `OPEN_QUESTIONS.md`.
+
+This module-specific gate does not require resolving later order/menu/payment workflows. The following MVP gates still apply before their affected modules or real-money use.
 
 ### Gate A — Requirements readiness (before implementation of affected module)
 - [ ] Confirmed vs proposed vs open rules are explicitly recorded in `DECISIONS.md`.

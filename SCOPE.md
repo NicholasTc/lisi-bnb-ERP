@@ -1,7 +1,8 @@
 # LISI BNB ERP — Product Scope
 
-**Status:** Draft baseline for review; not authorization to implement or launch  
-**Updated:** 2026-10-13  
+**Status:** Requirements baseline; Milestone 1 foundation approved, later milestones and launch require separate approval
+
+**Updated:** 2026-10-14
 **Source:** Confirmed business-design decisions from four design rounds, subsequent MVP scope revision and owner-approved review defaults (DECISIONS B23–B31, 2026-10-13). Documentation approval is not implementation authorization.
 
 ## 1. Purpose and success criterion
@@ -71,7 +72,7 @@ LISI BNB ERP supports one café/kitchen serving customers at the café and padel
 
 ## 4. Design principles and boundaries
 
-- One integrated application with clear modules for ordering, payment, operations, reporting and later inventory/accounting; no technology stack, hosting or database selected yet.
+- One modular monolith with clear modules for ordering, payment, operations and reporting. Approved stack: TypeScript/Next.js, PostgreSQL, Drizzle, Tailwind, Vitest and Playwright. Better Auth is approved subject to configuration/testing review. Hosting and payment provider remain unselected.
 - Single authoritative order/payment state; avoid independent competing transaction records.
 - Server-side enforcement of business rules and authorization; frontend displays do not establish payment truth.
 - Operational safety over feature breadth: explicit state transitions, concurrency protection, traceability, retries, reconciliation and manual recovery.
@@ -91,7 +92,7 @@ See `docs/DECISIONS.md` for the authoritative decision register. Especially impo
 5. Complete permission matrix, account/session lifecycle, physical reassignment checks and shift coverage under B26/B28.
 6. Pause behavior, estimated waits, order throttling and notification fallback.
 7. Remaining revenue/count/best-seller definitions and reconciliation under the confirmed Asia/Jakarta day and collection/refund displays.
-8. Recovery design/measurement and drills for B31, other RPOs, database/backups, infrastructure/monitoring and optional Google Sheets **read-only reporting mirror**.
+8. Recovery design/measurement and drills for B31, other RPOs, PostgreSQL backups, hosting/monitoring and optional Google Sheets **read-only reporting mirror**.
 9. Manual ledger format, outage cutover, overlap resolution and post-outage reconciliation under B27.
 10. Privacy/security, retention, operating constraints and relevant Indonesian regulatory/provider requirements.
 

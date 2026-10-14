@@ -1,7 +1,7 @@
 # LISI BNB ERP — Reliability and Recovery Requirements
 
 **Status:** Safety baseline and proposed controls; detailed mechanisms require technical design approval.  
-**Updated:** 2026-10-13
+**Updated:** 2026-10-14
 
 Owner-approved business defaults are recorded in `DECISIONS.md` B23–B31. Mechanisms and unresolved details remain subject to design; approval is not evidence that recovery or provider capabilities work.
 
@@ -81,7 +81,7 @@ This is a real-money, real-food ordering system. We cannot promise zero incident
 
 ### Security and audit
 - Least-privilege role checks enforced on the server.
-- Apply B28's approved permission direction and individual employee accounts on shared devices. Full permissions, session switching, revocation and recovery procedures remain OPEN.
+- Apply B28's permission direction and individual employee accounts on shared devices. Foundation session expiry/revocation is approved in `decisions/001-foundation.md`; full operational permissions, production account lifecycle and recovery procedures remain OPEN.
 - Protect credentials and personal information; minimize collection, define retention, and follow applicable Indonesian law and provider agreements.
 - Record actor, timestamp, before/after or event details for refund/cancellation, price/availability changes, location correction and inventory/accounting actions when added.
 - Avoid storing raw sensitive payment credentials.
