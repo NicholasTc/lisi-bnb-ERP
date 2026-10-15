@@ -1,4 +1,4 @@
-# Foundation data model
+# Data model
 
 Milestone 1 contains only employee authentication and environment isolation:
 
@@ -12,4 +12,10 @@ Milestone 1 contains only employee authentication and environment isolation:
 
 Foreign keys prevent orphan records. Disabling an employee deletes sessions in the same database transaction; a session-insert trigger locks/checks its employee to prevent a concurrent login from restoring access.
 
-No order/payment or money fields exist. Future money fields must use integer IDR and approved constraints; their schema is deliberately deferred.
+Milestone 2 adds:
+- `product`: original/optional English name, category and description; exact nonnegative integer-IDR inclusive price; availability, visibility and edit version.
+- `building`: stable identity/name, active flag and edit version; case-insensitive trimmed-name uniqueness.
+- `location`: stable court/numbered-table identity linked to a building, checked kind/positive table number, active flag and edit version. Names are unique within building/kind. Inactive parent buildings hide their locations.
+- `catalog_event`: actor, entity identity, before/after values and timestamp, committed atomically with each catalog mutation. Restrictive employee FK preserves actor attribution; no application deletion endpoint exists.
+
+Product/location identities are retained on archive/inactivation. Application version checks prevent stale overwrites. No order/payment records exist; later orders must freeze prices/destination details separately from this mutable catalog.

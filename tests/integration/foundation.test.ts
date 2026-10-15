@@ -41,8 +41,8 @@ beforeEach(async () => {
 afterAll(async () => { await resetTestData(pool); await pool.end(); await getPool().end(); });
 
 describe("real PostgreSQL foundation", () => {
-  it("has applied both migrations and is ready", async () => {
-    expect(Number((await pool.query("SELECT count(*) FROM drizzle.__drizzle_migrations")).rows[0].count)).toBe(2);
+  it("has applied all three migrations and is ready", async () => {
+    expect(Number((await pool.query("SELECT count(*) FROM drizzle.__drizzle_migrations")).rows[0].count)).toBe(3);
     await expect(checkReadiness()).resolves.toBeUndefined();
   });
   it("uses a local database owner without cluster administration privileges", async () => {

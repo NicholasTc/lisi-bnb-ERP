@@ -70,6 +70,7 @@ export default function SignIn() {
       <section className="mt-8 border-t border-slate-300 pt-6" aria-label="Current employee">
         <p>Signed in as <strong>{identity.user.name}</strong></p>
         <p className="mt-2 text-sm">{identity.user.email}</p>
+        {identity.roles.some(role => role === "owner" || role === "preparation") && <Link className="mt-5 block underline" href="/employee/menu">Manage menu & locations</Link>}
         <button className="mt-6 min-h-12 rounded-md bg-[#17304b] px-6 text-white" disabled={busy} onClick={() => { void signOut(); }}>Sign out</button>
       </section> :
       <form onSubmit={signIn} className="mt-8 space-y-5">

@@ -23,6 +23,17 @@ Every critical workflow requires automated tests where practical plus realistic 
 
 This module-specific gate does not require resolving later order/menu/payment workflows. The following MVP gates still apply before their affected modules or real-money use.
 
+### Milestone 2 — Menu/location gate (approved 2026-10-14)
+
+- Customers browse in Bahasa Indonesia/English without login; search/categories, inclusive IDR prices, unavailable labels and truthful loading/empty/network-error states work on mobile/desktop.
+- Owners create/edit/archive menu items and manage buildings/courts/numbered tables; preparation staff can change only availability. Anonymous, delivery/supervisor, forged-field and cross-origin edits are rejected server-side.
+- Prices reject fractions/negative values; names, numbered tables, parent relationships and scoped duplicate locations are validated, including database constraints.
+- Concurrent stale edits return conflict; retrying creation with the same operation ID cannot duplicate records. Every committed edit has actor/before/after history; an audit failure rolls back the edit.
+- Stable court-ID links preselect an active court in an active building, require explicit confirmation and allow override. Unknown/inactive/table IDs require correction; no order is created by selection.
+- Additive migrations apply to isolated PostgreSQL and rerun safely; foundation regression checks pass. No real menu/location content is fabricated, no orders/payments/operational queues added.
+
+Executed evidence belongs in `VERIFICATION-M2.md`; passing this gate does not approve Milestone 3 or production use.
+
 ### Gate A — Requirements readiness (before implementation of affected module)
 - [ ] Confirmed vs proposed vs open rules are explicitly recorded in `DECISIONS.md`.
 - [ ] Demo work may proceed with O01 open under B32, once its affected business rules are approved. Official capabilities and confirmation mechanism must be validated before implementing/testing the real-provider integration; demo success is not that evidence.

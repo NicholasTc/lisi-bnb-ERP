@@ -9,7 +9,7 @@ const commands: Record<string, { test?: boolean; command: string[] }> = {
   start: { command: ["next", "start", "--hostname", "127.0.0.1", "--port", "3000"] },
   integration: { test: true, command: ["vitest", "run", "--project", "integration"] },
   e2e: { test: true, command: ["playwright", "test"] },
-  "e2e-server": { test: true, command: ["next", "dev", "--hostname", "127.0.0.1", "--port", "3100"] },
+  "e2e-server": { test: true, command: ["tsx", "scripts/e2e-server.ts"] },
   generate: { command: ["drizzle-kit", "generate"] },
   migrate: { command: ["tsx", "scripts/migrate.ts"] },
   "migrate-test": { test: true, command: ["tsx", "scripts/migrate.ts"] },

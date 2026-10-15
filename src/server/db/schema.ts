@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, index, integer, pgTable, primaryKey, text, timestamp, uniqueIndex, bigint } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, pgTable, primaryKey, text, timestamp, uniqueIndex, bigint, jsonb } from "drizzle-orm/pg-core";
 
 const time = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 export const user = pgTable("user", {
@@ -52,3 +52,41 @@ export const environmentMarker = pgTable("environment_marker", {
   id: integer("id").primaryKey(), environment: text("environment").notNull(),
 }, table => [check("single_environment", sql`${table.id} = 1`),
   check("known_environment", sql`${table.environment} IN ('development', 'test', 'production')`)]);
+
+export const product = pgTable("product", {
+  id: text("id").primaryKey(), name: text("name").notNull(), nameEn: text("name_en"),
+  description: text("description").notNull().default(""), descriptionEn: text("description_en"),
+  category: text("category").notNull(), categoryEn: text("category_en"),
+  priceIdr: integer("price_idr").notNull(), available: boolean("available").notNull().default(true),
+  active: boolean("active").notNull().default(true), version: integer("version").notNull().default(1),
+  updatedAt: time("updated_at").notNull().defaultNow(),
+}, table => [check("product_price_nonnegative", sql`${table.priceIdr} >= 0`),
+  check("product_version_positive", sql`${table.version} > 0`),
+  check("product_name_valid", sql`length(btrim(${table.name})) BETWEEN 1 AND 120`),
+  check("product_category_valid", sql`length(btrim(${table.category})) BETWEEN 1 AND 60`),
+  check("product_description_valid", sql`length(${table.description}) <= 500`),
+  check("product_translation_valid", sql`(${table.nameEn} IS NULL OR length(btrim(${table.nameEn})) BETWEEN 1 AND 120) AND (${table.categoryEn} IS NULL OR length(btrim(${table.categoryEn})) BETWEEN 1 AND 60) AND (${table.descriptionEn} IS NULL OR length(${table.descriptionEn}) <= 500)`)]);
+export const building = pgTable("building", {
+  id: text("id").primaryKey(), name: text("name").notNull(),
+  active: boolean("active").notNull().default(true), version: integer("version").notNull().default(1),
+  updatedAt: time("updated_at").notNull().defaultNow(),
+}, table => [uniqueIndex("building_name_unique").on(sql`lower(btrim(${table.name}))`),
+  check("building_name_valid", sql`length(btrim(${table.name})) BETWEEN 1 AND 120`),
+  check("building_version_positive", sql`${table.version} > 0`)]);
+export const location = pgTable("location", {
+  id: text("id").primaryKey(), buildingId: text("building_id").notNull().references(() => building.id, { onDelete: "restrict" }),
+  kind: text("kind").notNull(), name: text("name").notNull(), tableNumber: integer("table_number"),
+  active: boolean("active").notNull().default(true), version: integer("version").notNull().default(1),
+  updatedAt: time("updated_at").notNull().defaultNow(),
+}, table => [uniqueIndex("location_name_unique").on(table.buildingId, table.kind, sql`lower(btrim(${table.name}))`),
+  check("location_kind_valid", sql`${table.kind} IN ('court', 'table')`),
+  check("location_name_valid", sql`length(btrim(${table.name})) BETWEEN 1 AND 120`),
+  check("location_table_number_valid", sql`(${table.kind} = 'court' AND ${table.tableNumber} IS NULL) OR (${table.kind} = 'table' AND ${table.tableNumber} IS NOT NULL AND ${table.tableNumber} > 0 AND ${table.name} = ${table.tableNumber}::text)`),
+  check("location_version_positive", sql`${table.version} > 0`)]);
+export const catalogEvent = pgTable("catalog_event", {
+  id: text("id").primaryKey(), actorId: text("actor_id").notNull().references(() => user.id, { onDelete: "restrict" }),
+  entity: text("entity").notNull(), entityId: text("entity_id").notNull(),
+  before: jsonb("before"), after: jsonb("after").notNull(),
+  createdAt: time("created_at").notNull().defaultNow(),
+}, table => [index("catalog_event_entity_idx").on(table.entity, table.entityId),
+  check("catalog_event_entity_valid", sql`${table.entity} IN ('product', 'building', 'location')`)]);

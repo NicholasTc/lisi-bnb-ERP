@@ -1,6 +1,6 @@
-# LISI BNB ERP — Foundation
+# LISI BNB ERP
 
-Milestone 1 only. Employee authentication, database/environment isolation, health checks and test tooling. Ordering, all payments and dashboards are absent. No production deployment or provisioning.
+Milestones 1–2: foundation, bilingual customer menu, protected menu/availability management and owner-managed location directory. Ordering, all payments and operational dashboards are absent. No production deployment or provisioning.
 
 ## Requirements
 
@@ -24,6 +24,10 @@ Provisioning prompts for a password with input hidden. Use a unique 12–128 cha
 
 Open http://127.0.0.1:3000. Sign in at `/employee/sign-in`. Only the exact configured origin is trusted; using `localhost` instead of `127.0.0.1` will fail origin checks.
 
+Menu and directory start empty. To manage them, provision a local **owner** account with the same command above using `owner` instead of `preparation,delivery`, sign in, then open `/employee/menu`. Use your own unique email; existing accounts are never overwritten or silently granted extra roles. Preparation accounts can toggle availability but cannot change prices or directory entries. Account administration UI remains a later milestone.
+
+Owners enter final inclusive IDR prices, optional English translations, buildings, courts and numbered tables. A court's displayed destination link (`/?court=<id>`) is the URL to encode in its ordering QR; image/print generation is not included yet. Customers use ID/EN to switch languages and explicitly confirm/change the court. No cart, order or payment is created. See [Milestone 2 verification](docs/VERIFICATION-M2.md).
+
 `local:setup` creates random independent database passwords and auth secrets in ignored `.local/` files with restricted permissions; it does not overwrite existing files. Never run `docker compose config` in shared logs: it can display interpolated secrets. Existing development database credentials must match its persistent volume; do not remove that volume to fix credentials without deciding whether its data can be lost.
 
 Development PostgreSQL binds to `127.0.0.1:55432`; disposable test PostgreSQL to `127.0.0.1:55433`. The test data directory is tmpfs and disappears when that container stops. To rebuild it, start the container and rerun `db:migrate:test`. Do not run integration and browser suites concurrently: both deliberately manage disposable test identities.
@@ -43,7 +47,7 @@ npm run build
 npm run start
 ```
 
-`start` verifies the production build locally using development configuration; it is not a production deployment. Browser tests start their own test-configured app at `127.0.0.1:3100` and briefly pause/unpause only `db-test` to verify database interruption handling. Playwright Chromium is the milestone's browser scope; additional device/browser acceptance belongs to later workflows.
+`start` verifies the production build locally using development configuration; it is not a production deployment. Browser tests build/start a separate packaged app at `127.0.0.1:3100` using isolated test configuration and `.next-test` output, and briefly pause/unpause only `db-test` to verify database interruption handling. Keep integration and browser suites sequential. Playwright Chromium is the milestone's browser scope; additional device/browser acceptance belongs to later workflows.
 
 Migrations are SQL files under `drizzle/`. Generate new reviewed migrations with `npm run db:generate`; do not use schema push or modify applied migrations. Local migration tools validate both the URL target and database environment marker; production migration/provisioning procedures are deliberately unavailable.
 

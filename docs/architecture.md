@@ -1,6 +1,6 @@
 # Foundation architecture
 
-Approved 2026-10-14. Milestone 1 only; no deployment or payment processing.
+Approved 2026-10-14. Milestones 1–2; no deployment, ordering or payment processing.
 
 - One TypeScript/Next.js application. HTTP handlers translate requests; server services enforce identity, authorization and database rules. Tailwind supplies minimal accessible styling.
 - PostgreSQL is authoritative. Drizzle schemas generate reviewed SQL migrations; schema push and automatic startup migrations are not used.
@@ -13,3 +13,7 @@ Approved 2026-10-14. Milestone 1 only; no deployment or payment processing.
 - All payments are disabled. Production configuration is documented/tested locally, not connected to production infrastructure.
 
 See [data model](data-model.md), [foundation decision](decisions/001-foundation.md), [open questions](OPEN_QUESTIONS.md) and [run instructions](../README.md).
+
+Catalog module: server services own input/permission checks and transactional catalog/audit writes. Public browsing returns only visible menu items and active directory records; authenticated editing has explicit owner/preparation permissions. Optimistic versions plus row locks reject conflicts. Client creation IDs deduplicate retries without background infrastructure. See [catalog decision](decisions/002-catalog.md).
+
+Browser tests build and start the packaged Next.js application with `APP_ENV=test`, a separate `.next-test` directory and `tsconfig.e2e.json`. They cannot reuse the development server/build; avoiding a second development watcher prevents shared generated-type reload loops. `NODE_ENV=production` selects Next.js optimization only: database/auth/payment configuration remains isolated test configuration. Generated test output is ignored by source lint/version control.

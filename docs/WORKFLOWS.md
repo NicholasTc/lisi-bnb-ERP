@@ -12,7 +12,7 @@
 - **Supervisor:** Authorizes cancellations/refunds, manages service pauses, task reassignment and destination corrections; detailed limits remain **OPEN**.
 - **Owner:** Controls prices, accounts and financial reporting; authorizes cancellations/refunds and may release/reassign claimed work.
 
-Multiple employees may have each role; multi-role accounts should be supported. A shared café device and employee smartphones are expected. **CONFIRMED:** Individual accounts and server-side authorization are required, including on shared devices. Foundation session expiry/revocation policy is approved in `decisions/001-foundation.md`. Production account recovery/lifecycle and the complete operational permission matrix remain **OPEN**.
+Multiple employees may have each role; multi-role accounts should be supported. A shared café device and employee smartphones are expected. **CONFIRMED:** Individual accounts and server-side authorization are required, including on shared devices. Foundation session expiry/revocation policy is approved in `decisions/001-foundation.md`. Milestone 2 menu/directory permissions and bilingual browsing are approved in `decisions/002-catalog.md`. Production account recovery/lifecycle and the remaining operational permission matrix remain **OPEN**.
 
 ## 2. Customer ordering — confirmed business sequence
 

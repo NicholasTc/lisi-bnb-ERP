@@ -10,3 +10,5 @@
 - Full operational permission matrix; foundation implements only identity and owner diagnostic access.
 
 Remaining payment/order/location/reporting decisions remain in `DECISIONS.md` O01–O16. They are not silently resolved by the foundation.
+
+Milestone 2 settles fixed final-inclusive prices, deferred variants, bilingual UI and owner-only directory management starting empty; see `decisions/002-catalog.md`. Before checkout: decide whether zero-price orders are permitted, plus pending-payment availability and the remaining ordering/fulfillment rules. Real menu content/translations and locations must be supplied by the owner before customer use.

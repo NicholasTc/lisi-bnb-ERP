@@ -9,7 +9,11 @@ export const testPool = () => {
 export async function resetTestData(pool: Pool) {
   if (readConfig().environment !== "test") throw new Error("Refusing non-test reset");
   await assertDatabaseEnvironment(pool);
-  // Delete only disposable test identities and throttling; preserve marker/migration history.
+  await pool.query("DELETE FROM catalog_event");
+  await pool.query("DELETE FROM location");
+  await pool.query("DELETE FROM building");
+  await pool.query("DELETE FROM product");
+  // Delete disposable test fixtures only; preserve marker/migration history.
   await pool.query('DELETE FROM "user"');
   await pool.query("DELETE FROM verification");
   await pool.query("DELETE FROM rate_limit");

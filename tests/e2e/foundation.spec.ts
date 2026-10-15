@@ -16,7 +16,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => { await resetTestData(pool); await pool.end(); });
 test("application, health and protected endpoints", async ({ page, request }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "LISI BNB ERP" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "LISI BNB", exact: true })).toBeVisible();
   expect((await request.get("/api/health/live")).status()).toBe(200);
   expect((await request.get("/api/health/ready")).status()).toBe(200);
   expect((await request.get("/api/admin/health")).status()).toBe(401);

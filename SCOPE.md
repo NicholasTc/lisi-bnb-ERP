@@ -1,6 +1,6 @@
 # LISI BNB ERP — Product Scope
 
-**Status:** Requirements baseline; Milestone 1 foundation approved, later milestones and launch require separate approval
+**Status:** Requirements baseline; Milestones 1–2 approved, later milestones and launch require separate approval
 
 **Updated:** 2026-10-14
 **Source:** Confirmed business-design decisions from four design rounds, subsequent MVP scope revision and owner-approved review defaults (DECISIONS B23–B31, 2026-10-13). Documentation approval is not implementation authorization.
@@ -18,6 +18,7 @@ LISI BNB ERP supports one café/kitchen serving customers at the café and padel
 - Court-specific QR codes open the ordering website and preselect the court; customers can change the selected location.
 - Support court delivery, café pickup and dine-in; use order-specific pickup codes, numbered dine-in tables and explicit building/court confirmation. Directory and handoff details remain open.
 - Guest checkout; customer accounts are not required.
+- Milestone 2 supports bilingual Bahasa Indonesia/English browsing and owner-managed location setup starting empty; see `docs/decisions/002-catalog.md` for the approved module boundary.
 - Support both QR self-ordering and employee-entered counter orders.
 - Menu browsing, cart, checkout, and order status are part of the operational ordering flow.
 
@@ -50,6 +51,7 @@ LISI BNB ERP supports one café/kitchen serving customers at the café and padel
 
 ### Management and reporting
 - Owner dashboard prioritizes today's revenue, order count, best-selling products and order history.
+- Menu uses one fixed final inclusive integer-IDR price per item. Variants/modifiers are deferred. Owners manage the building/court/numbered-table directory; owner-supplied English menu translations are optional.
 - Designated counter staff enter orders; preparation staff control availability/kitchen pauses; supervisors manage service pauses, reassignment and destination corrections; owners control prices, accounts and financial reporting. Use individual accounts on shared devices and server-side authorization; the complete matrix still needs approval.
 - Reports use Asia/Jakarta midnight-to-midnight: verified payments received, confirmed refunds issued and their difference are separate from merchant settlement. Count unique paid orders, not duplicate payments; remaining revenue/best-seller rules are open.
 - Maintain transaction history sufficient for accurate basic reporting and future inventory/accounting additions.
@@ -86,8 +88,8 @@ LISI BNB ERP supports one café/kitchen serving customers at the café and padel
 
 See `docs/DECISIONS.md` for the authoritative decision register. Especially important:
 1. Real integration/pilot gate: merchant/payment provider and supported programmatic confirmation/refund methods for the QRIS-only MVP; outage verification/import evidence. Non-production demo development is permitted under B32 while merchant selection is pending.
-2. Court/building/table directory, QR placement, coverage, secure guest recovery and detailed pickup/delivery handoff.
-3. Exact menu variants/modifiers, prices/taxes/discounts, pending-payment availability and replacement-order handling.
+2. Actual court/building/table entries, printed QR placement, coverage, secure guest recovery and detailed pickup/delivery handoff. Owner-only directory management starting empty is approved for Milestone 2.
+3. Actual menu/prices, discounts, zero-price checkout policy, pending-payment availability and replacement-order handling. Fixed final-inclusive prices and deferred variants/modifiers are approved.
 4. Exact order/payment transitions, edit limits, cancellation exceptions, refund execution, unknown outcomes and expiration mechanics under B24/B25/B29.
 5. Complete permission matrix, account/session lifecycle, physical reassignment checks and shift coverage under B26/B28.
 6. Pause behavior, estimated waits, order throttling and notification fallback.

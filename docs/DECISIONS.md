@@ -46,6 +46,11 @@
 | B30 | CONFIRMED | Order-specific pickup codes, numbered dine-in tables and explicit building/court confirmation. For absent court customers, record failed delivery, attempt the agreed contact method and return to the café; do not automatically mark delivered. |
 | B31 | CONFIRMED | Reporting uses Asia/Jakarta midnight-to-midnight, showing verified payments received, confirmed refunds issued and their difference separately from settlement. Count unique paid orders, not duplicate payments. Recovery target: digital service within one hour, with no permanent loss of paid-order details; feasibility must be demonstrated in drills. |
 | B32 | CONFIRMED | Use a demo payment provider for non-production development/testing while merchant selection is pending. Keep provider integration replaceable without rewriting core order logic. Simulated evidence/data must be clearly distinguished and isolated from real transactions; demo mechanisms must be unavailable in production. Official provider integration and verification remain mandatory before a real-money pilot. |
+| B33 | CONFIRMED | Milestone 2 uses one fixed final-inclusive integer-IDR price per item; variants/modifiers are deferred. Owner-only building/court/numbered-table management starts empty. Customer UI offers Bahasa Indonesia and English; actual menu/location content comes from the owner. |
+
+### Approval record — B33 / Milestone 2
+
+Product owner approved Milestone 2 menu/location implementation and explicitly confirmed pricing, directory permissions/empty start and both customer languages on 2026-10-14. See `decisions/002-catalog.md` for implementation choices and module acceptance. This settles O04/O05/O06 only for this module; ordering, payments, operational permissions and launch remain separate approvals.
 
 ### Approval record — B23–B31
 
@@ -104,8 +109,8 @@ This approval supersedes earlier documentation-only authorization boundaries for
 | BLOCKER | O01 | Real integration/pilot gate: which official merchant/payment integration reliably verifies QRIS payments? Obtain documentation and merchant approval before real-provider implementation/testing. B32 permits provider-independent demo development without selecting a merchant; demo results do not resolve this gate. |
 | BLOCKER | O02 | B24–B26/B29 settle default exception policies. Approve exact states/transitions, late-payment review outcomes, post-preparation cancellation grounds, refund execution/unknown outcomes, and safeguards against excess concurrent refunds. |
 | BLOCKER | O03 | QRIS-only counter tender is settled by B23. Define provider evidence, receipt handling and authorized outage-import/payment-verification procedures; no unrestricted manual-paid control. |
-| BLOCKER | O04 | B30 settles numbered tables, pickup codes and court confirmation. Supply building/court/table directory, QR mapping, coverage and destination-correction limits by fulfillment stage. |
-| BLOCKER | O05 | B29 settles checkout revalidation and frozen agreed prices. Define menu/variants/modifiers, pricing, discounts/tax/service rules, pending-payment availability policy and replacement-order handling. |
+| BLOCKER | O04 | B33 approves owner-only directory management starting empty; B30 settles numbered tables, pickup codes and court confirmation. Supply real entries/QR placement, coverage and destination-correction limits by fulfillment stage before customer ordering. |
+| BLOCKER | O05 | B33 settles fixed final-inclusive prices and deferred variants/modifiers; B29 settles checkout revalidation and frozen agreed prices. Supply actual menu/prices; decide discounts, zero-price checkout, pending-payment availability and replacement-order handling. |
 | BLOCKER | O06 | B28 settles permission direction and individual identity. Approve the complete matrix, counter permission assignment, wait-estimate permissions, owner/supervisor overlaps, session switching, revocation and account recovery. |
 | BLOCKER | O07 | B27 settles fallback limits and supervisor ownership. Finish ledger fields, cutover/overlap procedure, verified-payment evidence, import permissions, reconciliation deadline and resumption checks. |
 | BLOCKER | O08 | B31 settles timezone/day boundary and collection/refund displays. Define revenue terminology, best-seller rules and treatment of canceled/refunded orders. Distinguish actual extra payments from duplicate notifications: extra money is traceable, not another sale. |
