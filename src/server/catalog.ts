@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, asc, eq } from "drizzle-orm";
 import { getDb } from "./db/client";
-import { building, catalogEvent, location, product } from "./db/schema";
+import { building, catalogEvent, courtService, location, product } from "./db/schema";
 import { requireEmployee } from "./employee";
 import { HttpError } from "./http";
 import { booleanField, checkKeys, idField, integerField, locationInput, productInput, textField } from "./catalog-input";
@@ -22,7 +22,9 @@ export async function publicCatalog(court: string | null): Promise<PublicCatalog
       .orderBy(asc(building.name), asc(location.kind), asc(location.name), asc(location.id));
     const selected = court === null ? undefined : places.find(place => place.id === court && place.kind === "court");
     const config = readConfig();
-    return { orderingEnabled: config.environment !== "production", products, locations: places as PublicCatalog["locations"],
+    const service = (await tx.select({ paused: courtService.paused, deliveryPaused: courtService.deliveryPaused }).from(courtService).where(eq(courtService.id, 1)))[0];
+    if (!service) throw new HttpError(503, "NOT_READY");
+    return { orderingPaused: service.paused || service.deliveryPaused, orderingEnabled: config.environment !== "production", products, locations: places as PublicCatalog["locations"],
       qr: { status: court === null ? "absent" : selected ? "valid" : "invalid", courtId: selected?.id ?? null } };
   }, { isolationLevel: "repeatable read", accessMode: "read only" });
 }

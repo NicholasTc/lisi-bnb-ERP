@@ -9,9 +9,11 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   enabled: boolean("enabled").notNull().default(false),
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
+  version: integer("version").notNull().default(1),
   createdAt: time("created_at").notNull().defaultNow(),
   updatedAt: time("updated_at").notNull().defaultNow(),
-});
+}, t => [check("employee_version_positive", sql`${t.version} > 0`), uniqueIndex("employee_email_normalized").on(sql`lower(btrim(${t.email}))`)]);
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
   token: text("token").notNull().unique(),
@@ -56,15 +58,27 @@ export const customerOrder = pgTable("customer_order", {
   locationId: text("location_id").references(() => location.id, { onDelete: "restrict" }), destination: text("destination").notNull(),
   totalIdr: integer("total_idr").notNull(), currency: text("currency").notNull().default("IDR"),
   evidenceMode: text("evidence_mode").notNull().default("demo"), state: text("state").notNull().default("awaiting_payment"), reason: text("reason"),
+  preparationAssigneeId: text("preparation_assignee_id").references(() => user.id, { onDelete: "restrict" }),
+  preparationClaimedAt: time("preparation_claimed_at"), preparationReadyAt: time("preparation_ready_at"),
+  deliveryAssigneeId: text("delivery_assignee_id").references(() => user.id, { onDelete: "restrict" }),
+  deliveryClaimedAt: time("delivery_claimed_at"), collectedAt: time("collected_at"), arrivedAt: time("arrived_at"),
+  heldState: text("held_state"), incident: text("incident"), contactAttempt: text("contact_attempt"), returnedAt: time("returned_at"),
+  unpaidHandoverAt: time("unpaid_handover_at"),
+  effectiveLocationId: text("effective_location_id").references(() => location.id, { onDelete: "restrict" }), effectiveDestination: text("effective_destination"),
+  operationVersion: integer("operation_version").notNull().default(1),
   publicReference: text("public_reference").unique(), demoTransactionId: text("demo_transaction_id").unique(), pickupCode: text("pickup_code").unique(),
   createdAt: time("created_at").notNull().defaultNow(), expiresAt: time("expires_at"), accessExpiresAt: time("access_expires_at").notNull(),
 }, t => [check("order_amount_valid", sql`${t.totalIdr} > 0 AND ${t.currency} = 'IDR' AND ${t.evidenceMode} IN ('demo','court_test')`),
   check("order_source_valid", sql`(${t.source} = 'guest' AND ${t.createdBy} IS NULL) OR (${t.source} = 'counter' AND ${t.createdBy} IS NOT NULL)`),
   check("order_contact_valid", sql`length(btrim(${t.customerName})) BETWEEN 1 AND 120 AND (${t.kind} <> 'court' OR (${t.phone} IS NOT NULL AND length(${t.phone}) BETWEEN 8 AND 30))`),
   check("order_location_valid", sql`(${t.kind} = 'pickup' AND ${t.locationId} IS NULL AND ${t.pickupCode} IS NOT NULL) OR (${t.kind} IN ('court', 'dine_in') AND ${t.locationId} IS NOT NULL AND ${t.pickupCode} IS NULL)`),
-  check("order_state_valid", sql`(${t.evidenceMode} = 'demo' AND ${t.state} IN ('awaiting_payment','queued_for_preparation','canceled','exception')) OR (${t.evidenceMode} = 'court_test' AND ${t.state} IN ('awaiting_preparation','canceled','exception'))`),
+  check("order_state_valid", sql`(${t.evidenceMode} = 'demo' AND ${t.state} IN ('awaiting_payment','queued_for_preparation','canceled','exception')) OR (${t.evidenceMode} = 'court_test' AND ${t.state} IN ('awaiting_preparation','preparing','ready','delivery_claimed','out_for_delivery','awaiting_handover','unpaid_handover','canceled','exception'))`),
   check("court_workflow_valid", sql`(${t.evidenceMode} = 'demo' AND ${t.demoTransactionId} IS NOT NULL AND ${t.publicReference} IS NULL) OR (${t.evidenceMode} = 'court_test' AND ${t.source} = 'guest' AND ${t.kind} = 'court' AND ${t.demoTransactionId} IS NULL AND ${t.publicReference} IS NOT NULL AND ${t.publicReference} ~ '^LB-[A-F0-9]{10}$')`),
   check("order_deadlines_valid", sql`((${t.evidenceMode} = 'demo' AND ${t.expiresAt} IS NOT NULL AND ${t.expiresAt} > ${t.createdAt} AND ${t.expiresAt} <= ${t.createdAt} + interval '15 minutes') OR (${t.evidenceMode} = 'court_test' AND ${t.expiresAt} IS NULL)) AND ${t.accessExpiresAt} > ${t.createdAt} AND ${t.accessExpiresAt} <= ${t.createdAt} + interval '24 hours'`),
+  check("operation_version_positive", sql`${t.operationVersion} > 0`),
+  check("operation_review_valid", sql`(${t.heldState} IS NULL OR (${t.state} = 'exception' AND ${t.heldState} IN ('awaiting_preparation','preparing','ready','delivery_claimed','out_for_delivery','awaiting_handover'))) AND (${t.incident} IS NULL OR ${t.incident} IN ('other','absent','refused')) AND (${t.incident} IS NULL OR ${t.state} IN ('exception','canceled'))`),
+  check("operation_destination_valid", sql`(${t.effectiveLocationId} IS NULL AND ${t.effectiveDestination} IS NULL) OR (${t.evidenceMode} = 'court_test' AND ${t.effectiveLocationId} IS NOT NULL AND ${t.effectiveDestination} IS NOT NULL)`),
+  index("preparation_queue_idx").on(t.evidenceMode, t.state, t.createdAt, t.id),
   index("order_created_idx").on(t.createdAt)]);
 export const orderItem = pgTable("order_item", {
   orderId: text("order_id").notNull().references(() => customerOrder.id, { onDelete: "restrict" }),
@@ -144,3 +158,37 @@ export const catalogEvent = pgTable("catalog_event", {
   createdAt: time("created_at").notNull().defaultNow(),
 }, table => [index("catalog_event_entity_idx").on(table.entity, table.entityId),
   check("catalog_event_entity_valid", sql`${table.entity} IN ('product', 'building', 'location')`)]);
+
+// One durable court-ordering switch. Existing preparation continues during a pause.
+export const courtService = pgTable("court_service", {
+  id: integer("id").primaryKey(), paused: boolean("paused").notNull().default(false),
+  reason: text("reason"), version: integer("version").notNull().default(1),
+  deliveryPaused: boolean("delivery_paused").notNull().default(false), deliveryReason: text("delivery_reason"),
+  actorId: text("actor_id").references(() => user.id, { onDelete: "restrict" }),
+  updatedAt: time("updated_at").notNull().defaultNow(),
+}, t => [check("court_service_singleton", sql`${t.id} = 1 AND ${t.version} > 0`),
+  check("court_service_reason", sql`(${t.paused} AND length(btrim(${t.reason})) BETWEEN 1 AND 200 AND ${t.reason} IS NOT NULL) OR (NOT ${t.paused} AND ${t.reason} IS NULL)`)]);
+export const preparationCommand = pgTable("preparation_command", {
+  id: text("id").primaryKey(), actorId: text("actor_id").notNull().references(() => user.id, { onDelete: "restrict" }),
+  orderId: text("order_id").references(() => customerOrder.id, { onDelete: "restrict" }),
+  kind: text("kind").notNull(), digest: text("digest").notNull(), reason: text("reason"),
+  orderVersion: integer("order_version"), serviceVersion: integer("service_version"), createdAt: time("created_at").notNull().defaultNow(),
+}, t => [check("preparation_command_kind", sql`(${t.kind} IN ('claim','ready','hold') AND ${t.orderId} IS NOT NULL AND ${t.serviceVersion} IS NULL) OR (${t.kind} IN ('pause','resume') AND ${t.orderId} IS NULL AND ${t.serviceVersion} > 1 AND ${t.serviceVersion} IS NOT NULL)`),
+  check("preparation_command_reason", sql`(${t.kind} IN ('hold','pause') AND ${t.reason} IS NOT NULL AND length(btrim(${t.reason})) BETWEEN 1 AND 200) OR (${t.kind} NOT IN ('hold','pause') AND ${t.reason} IS NULL)`),
+  index("preparation_command_order_idx").on(t.orderId)]);
+
+export const employeeCommand = pgTable("employee_command", {
+  id: text("id").primaryKey(), actorId: text("actor_id").notNull().references(() => user.id, { onDelete: "restrict" }),
+  targetId: text("target_id").notNull().references(() => user.id, { onDelete: "restrict" }),
+  kind: text("kind").notNull(), digest: text("digest").notNull(), detail: jsonb("detail").notNull(),
+  createdAt: time("created_at").notNull().defaultNow(),
+}, t => [check("employee_command_kind", sql`${t.kind} IN ('create','edit','password_changed')`), index("employee_command_target_idx").on(t.targetId)]);
+
+export const operationCommand = pgTable("operation_command", {
+ id: text("id").primaryKey(), actorId: text("actor_id").notNull().references(() => user.id, { onDelete: "restrict" }),
+ orderId: text("order_id").references(() => customerOrder.id, { onDelete: "restrict" }), kind: text("kind").notNull(),
+ digest: text("digest").notNull(), reason: text("reason"), physicalCheck: text("physical_check"),
+ before: jsonb("before"), after: jsonb("after"), serviceVersion: integer("service_version"),
+ createdAt: time("created_at").notNull().defaultNow(),
+}, t => [check("operation_command_kind", sql`${t.kind} IN ('claim','collect','arrive','hold','contact','return','resume','reassign','cancel','correct','unpaid_handover','pause_delivery','resume_delivery')`),
+ index("operation_command_order_idx").on(t.orderId)]);

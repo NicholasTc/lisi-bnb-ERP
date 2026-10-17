@@ -97,7 +97,7 @@ export function StaffCatalog() {
     finally { setBusy(false); }
   }
   return <main className="staff-catalog">
-    <header className="staff-header"><div><Link href="/">Customer menu</Link><h1>Menu & locations</h1>
+    <header className="staff-header"><div><Link href="/">Customer menu</Link> · <Link href="/employee/preparation">Preparation queue</Link><h1>Menu & locations</h1>
       {identity && <p>Signed in as {identity.user.name}</p>}</div>
       {identity ? <button className="staff-button" disabled={busy} onClick={() => { void logout(); }}>Sign out</button> : <Link href="/employee/sign-in">Employee sign in</Link>}
     </header>

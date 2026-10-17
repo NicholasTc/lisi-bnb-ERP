@@ -24,10 +24,16 @@ export async function createOrder(raw: Record<string, unknown>, headers?: Header
   return transaction(async client => {
     // Even simultaneous first submissions serialize before an order row exists.
     await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`checkout:${input.id}`]);
-    const existing = (await client.query<OrderRow>("SELECT * FROM customer_order WHERE id=$1 FOR UPDATE", [input.id])).rows[0];
+    const existing = (await client.query<OrderRow & { access_valid: boolean }>("SELECT *, access_expires_at > clock_timestamp() AS access_valid FROM customer_order WHERE id=$1 FOR UPDATE", [input.id])).rows[0];
     if (existing) {
       if (existing.request_digest !== requestDigest) throw new HttpError(409, "CHECKOUT_ID_REUSED");
+      if (!existing.access_valid) throw new HttpError(404, "ORDER_NOT_FOUND");
       return viewOrder(client, existing);
+    }
+    if (mode === "court_test") {
+      const service = (await client.query<{ paused: boolean }>("SELECT (paused OR delivery_paused) AS paused FROM court_service WHERE id=1 FOR SHARE")).rows[0];
+      if (!service) throw new HttpError(503, "NOT_READY");
+      if (service.paused) throw new HttpError(503, "ORDERING_PAUSED");
     }
     const products = await client.query<{ id: string; name: string; name_en: string | null; description: string; description_en: string | null; price_idr: number; available: boolean; active: boolean }>(
       "SELECT * FROM product WHERE id = ANY($1::text[]) ORDER BY id FOR SHARE", [input.items.map(item => item.productId)]);
@@ -70,9 +76,9 @@ export async function viewOrder(client: PoolClient, order: OrderRow): Promise<Or
   const received = paid.reduce((sum, item) => sum + BigInt(item.amountIdr), 0n);
   const refunded = refunds.filter(item => item.state === "succeeded").reduce((sum, item) => sum + BigInt(item.amountIdr), 0n);
   const status = refunds.some(item => item.state === "pending") ? "refund_pending" : received > 0n && received === refunded ? "refunded" :
-    order.state === "exception" ? "review" : paid.some(item => item.primary) && order.state === "queued_for_preparation" ? "simulated_paid" : received > refunded ? "review" : "unpaid";
-  return { id: order.id, source: order.source, customerName: order.customer_name, phone: order.phone, kind: order.kind, destination: order.destination,
-    totalIdr: order.total_idr, state: order.state, reason: order.reason, createdAt: order.created_at.toISOString(), expiresAt: order.expires_at?.toISOString() ?? null,
+    order.state === "exception" && order.evidence_mode === "demo" ? "review" : paid.some(item => item.primary) && order.state === "queued_for_preparation" ? "simulated_paid" : received > refunded ? "review" : "unpaid";
+  return { id: order.id, source: order.source, customerName: order.customer_name, phone: order.phone, kind: order.kind, destination: order.effective_destination ?? order.destination,
+    totalIdr: order.total_idr, state: order.state, reason: order.evidence_mode === "court_test" ? null : order.reason, createdAt: order.created_at.toISOString(), expiresAt: order.expires_at?.toISOString() ?? null,
     accessExpiresAt: order.access_expires_at.toISOString(), demoTransactionId: order.demo_transaction_id, pickupCode: order.pickup_code, simulated: order.evidence_mode === "demo", testOnly: true, reference: order.public_reference, workflow: order.evidence_mode as "demo" | "court_test",
     items, receivedIdr: String(received), refundedIdr: String(refunded), paymentStatus: status,
     payments: paid.map(item => ({ ...item, refunds: refunds.filter(value => value.payment_id === item.id).map(({ id, state, amountIdr }) => ({ id, state, amountIdr })) })) };
@@ -97,7 +103,7 @@ export async function guestOrder(raw: Record<string, unknown>, cancel = false) {
 async function cancelUnpaid(client: PoolClient, order: OrderRow, actor: string | null, reason: string) {
   await expireOrder(client, order);
   if (order.state === "canceled") return;
-  if (order.state !== (order.evidence_mode === "court_test" ? "awaiting_preparation" : "awaiting_payment")) throw new HttpError(409, "PAID_CANCELLATION_REQUIRES_REVIEW");
+  if (order.state !== (order.evidence_mode === "court_test" ? "awaiting_preparation" : "awaiting_payment")) throw new HttpError(409, order.evidence_mode === "court_test" ? "PREPARATION_ALREADY_STARTED" : "PAID_CANCELLATION_REQUIRES_REVIEW");
   await client.query("UPDATE customer_order SET state='canceled',reason=$2 WHERE id=$1", [order.id, reason]);
   order.state = "canceled"; order.reason = reason;
   await orderAudit(client, order.id, "canceled", reason, actor);
@@ -111,6 +117,7 @@ export async function staffOrder(headers: Headers, raw: Record<string, unknown>,
   return transaction(async client => {
     const order = await orderLock(client, id);
     if (!privileged && !(who.roles.includes("counter") && order.created_by === who.user.id && order.source === "counter")) throw new HttpError(403, "FORBIDDEN");
+    if (cancel && order.evidence_mode === "court_test") throw new HttpError(409,"COURT_USE_OPERATIONS");
     if (cancel) await cancelUnpaid(client, order, who.user.id, textField(raw, "reason", 200));
     const value = await viewOrder(client, order);
     const inbox = privileged ? (await client.query(`SELECT i.id,i.payload,f.result FROM demo_inbox i LEFT JOIN financial_event f ON f.id=i.id WHERE i.order_id=$1 ORDER BY i.created_at,i.id`, [id])).rows : [];

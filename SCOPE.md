@@ -1,8 +1,8 @@
 # LISI BNB ERP — Product Scope
 
-**Updated:** 2026-10-16. **Status:** MVP v2 requirements confirmed; V2-1 local court ordering implemented for owner review; later operations/payment stages not started. No production/pilot authorization.
+**Updated:** 2026-10-17. **Status:** MVP v2 requirements confirmed; V2-1/V2-2 court ordering/preparation and V2-3 delivery/recovery/Team implemented for local review; normal payment/handover and later stages not started. No production/pilot authorization.
 
-The [court-first/manual QRIS decision](docs/decisions/004-court-first-manual-qris.md) supersedes conflicting v1 payment rules. [DECISIONS.md](docs/DECISIONS.md) distinguishes confirmed, superseded and open items. The application now provides V2-1 local court checkout; retained v1 payment simulation cannot establish payment on these new orders. See [decision 005](docs/decisions/005-court-ordering.md).
+The [court-first/manual QRIS decision](docs/decisions/004-court-first-manual-qris.md) supersedes conflicting v1 payment rules. [DECISIONS.md](docs/DECISIONS.md) distinguishes confirmed, superseded and open items. The application provides local court checkout, preparation, delivery/recovery and Team management under [decision 007](docs/decisions/007-delivery-and-team.md); retained v1 payment simulation cannot establish payment on these new orders. See [decision 005](docs/decisions/005-court-ordering.md).
 
 ## Purpose
 

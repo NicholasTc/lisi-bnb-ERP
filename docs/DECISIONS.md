@@ -12,7 +12,7 @@
 
 ## Current precedence — MVP v2
 
-B35–B39 and [the court-first/manual QRIS decision](decisions/004-court-first-manual-qris.md) supersede conflicting v1 payment/release rules. Phase 1 is customer court ordering; Phase 2 is counter/pickup/dine-in, with detailed rules deferred. V2-1 now adds local court checkout under B40; historical Milestone 3 demo data/services remain isolated. Payment-verification implementation is expressly blocked pending merchant review.
+B35–B39 and [the court-first/manual QRIS decision](decisions/004-court-first-manual-qris.md) supersede conflicting v1 payment/release rules. Phase 1 is customer court ordering; Phase 2 is counter/pickup/dine-in, with detailed rules deferred. V2-1 adds local court checkout under B40; B41 adds local preparation; B42 adds local delivery/recovery/Team; historical Milestone 3 demo data/services remain isolated. Payment-verification implementation is expressly blocked pending merchant review.
 
 ## Confirmed business decisions
 
@@ -58,6 +58,8 @@ B35–B39 and [the court-first/manual QRIS decision](decisions/004-court-first-m
 | B38 | CONFIRMED | Bright, professional, intuitive mobile-first app-style UI, DoorDash-inspired ordering simplicity and original branding; avoid dense dashboard/test-control presentation in normal ordering and task flows. |
 | B39 | CONFIRMED BLOCK | Merchant staff access, stable transaction reference/amount/time availability and immediate confirmation are OPEN. Do not implement payment verification until official merchant capabilities and the staff procedure are confirmed. Requirements/independent development do not pass real payment/handover acceptance. |
 | B40 | CONFIRMED | V2-1 implementation approved on 2026-10-16: submitted court orders are immediately eligible for unpaid preparation; no automatic cancellation; older/suspicious orders remain for staff review/escalation. Pre-claim customer cancellation and 24-hour private access remain. Exact local implementation/boundaries: `decisions/005-court-ordering.md`. V2-2 and payment verification remain separate gates. |
+| B41 | CONFIRMED | V2-2 approved 2026-10-17: preparation/owner work and pause new orders; supervisors view unless also preparation. Existing work continues during persistent pauses. Reasoned review holds stop unclaimed/own claimed preparation without automatic cancellation. Assignee-only ready, durable exclusive claims; resolution/reassignment remains V2-3. Local test defaults and exact boundary: `decisions/006-preparation.md`. |
+| B42 | CONFIRMED | V2-3 approved 2026-10-17: delivery/owner exclusive claim, collection and arrival; supervisor view/recovery; privileged physical checks, active-court correction, recorded contact/return, distinct unpaid exceptions and recollection after returned retry. Delivery pause stops fresh claims/court orders, not existing work. Owner Team administration uses temporary passwords with mandatory change, durable audit and revocation. Exact boundaries: `decisions/007-delivery-and-team.md`. Merchant verification/production remain gated. |
 
 ### Approval record — B35–B39 / MVP v2 (2026-10-16)
 

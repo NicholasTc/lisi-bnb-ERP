@@ -81,3 +81,26 @@ Executed evidence belongs in `VERIFICATION-M2.md`; passing this gate does not ap
 - Browser network-loss recovery, mobile layout, guest reopening, counter session expiry, migrations, source checks and foundation/catalog regressions pass. Demo tests do not validate merchant capture, real refunds or operational recovery targets.
 
 Executed evidence belongs in `VERIFICATION-M3.md`. No Milestone 4 or production approval is implied.
+
+## V2-2 — preparation gate (approved 2026-10-17)
+
+- Owner/preparation can work; supervisor alone can only view; guests/delivery/counter cannot read or mutate the preparation queue. Current role removal, idle expiry, disabling and logout revoke applicable access. Staff reads expose no phone/private key/payment evidence; guest responses expose no internal review reason.
+- Concurrent claims have exactly one winner/event/command. Only the assigned employee can mark ready or hold claimed work. Claim versus private guest cancellation has one valid committed outcome; cancellation fails after claim/ready. Invalid SQL transitions, assignment/timestamp rewrites and unaudited progress fail.
+- Same-command concurrent/lost-response/reloaded retries commit one action; changed actor/body fails. Replaying an old claim after ready cannot reverse progress. Injected audit failure leaves no partial ownership/command/state.
+- Pause persists in PostgreSQL, rejects fresh checkout and allows committed checkout recovery plus existing preparation. Version conflicts cannot silently overwrite service state; resume explicitly reopens. Checkout replay cannot bypass the existing 24-hour private-access deadline.
+- Required review reasons hold work unpaid without substitution/cancellation. Ready records preparation only; ordinary delivery/payment/completion stays unavailable.
+- ID/EN UI shows new/preparing/ready/review queues, actor/court/items, loading/empty/error/uncertainty states and customer progress. At 390px/1280px no page overflow; all queue tabs/actions are reachable. A blocked audio context cannot hide newly arriving work. Test-default 5-second polling recovers updates; after 15 seconds without success actions are blocked with a warning and refresh restores them.
+- All eight migrations apply fresh/reapply safely; development upgrade preserves preexisting records. Relevant unit/PostgreSQL/Chromium, type/lint/build checks pass; owner device/usability/sound acceptance remains a separate human check. Production notification targets, recovery drills and merchant gate remain unresolved.
+
+Evidence: [VERIFICATION-V2-2.md](VERIFICATION-V2-2.md). Passing local automation is not approval to start V2-3 or serve real customers.
+
+## V2-3 — delivery, physical recovery and Team gate (approved 2026-10-17)
+
+- Owner/delivery may claim one ready order; supervisor alone views and performs approved recovery, preparation alone cannot use delivery/Team. Assigned delivery staff alone see phone contact and progress collection/arrival. Two claims/pause races and competing physical decisions yield one consistent committed result.
+- Idempotent command replay survives lost responses/reload/later progress without duplicate assignment/actions. Stale versions, forged fields and former/disabled assignees fail; audit failure rolls back the whole operation. Original destination and financial history survive correction/recovery.
+- Physical reason/check is mandatory for supervisor/owner resume/reassign/cancel/correct/unpaid handover. Unavailable targets/courts fail. Absent/refused incident requires contact; collected drinks return before cancellation. Returned retry moves to awaiting collection and preserves prior claim/collection/arrival/return history. Unpaid handover is explicitly confirmed, remains unpaid and is terminal; no normal paid/completed bypass.
+- Owner Team lists/counts/searches accounts, creates once with known roles/temporary password, edits with versions and revokes target sessions immediately. Nonowners/public users fail. Last enabled password-established owner cannot be removed/disabled through administration, even concurrently. No deletion/password retrieval/reset UI; active tasks remain for supervised recovery.
+- Temporary-password sessions access only setup/logout/self setup metadata. New password differs, uses 12–128 characters and the existing library hash/verify; atomic audit failure leaves original credentials/flag/session unchanged. Success revokes every session and requires fresh sign-in. Secrets never enter audit/browser storage; full-reload uncertain creation is recovered by searching unique email.
+- Existing ordering/preparation/catalog/auth/demo regressions, exact-IDR separation, ten fresh/reapplied migrations, schema-snapshot agreement, preserved development data, type/lint/build and relevant PostgreSQL/Chromium checks pass. ID/EN mobile/desktop screens expose clear pending/stale/empty/role states. Human café-device/procedure acceptance remains pending.
+
+Evidence: [VERIFICATION-V2-3.md](VERIFICATION-V2-3.md). Merchant review, production bootstrap/password recovery, real-money tests and public launch are separate gates. No V2-4 implementation is authorized by passing this stage.

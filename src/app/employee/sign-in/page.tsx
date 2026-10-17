@@ -1,9 +1,10 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { PasswordChange } from "@/components/password-change";
 import { clearCounterDrafts } from "@/ordering/browser";
 
-type Identity = { user: { name: string; email: string }; roles: string[] };
+type Identity = { user: { name: string; email: string }; roles: string[]; passwordChangeRequired: boolean };
 export default function SignIn() {
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +72,12 @@ export default function SignIn() {
       <section className="mt-8 border-t border-slate-300 pt-6" aria-label="Current employee">
         <p>Signed in as <strong>{identity.user.name}</strong></p>
         <p className="mt-2 text-sm">{identity.user.email}</p>
+        {identity.passwordChangeRequired ? <PasswordChange onChanged={()=>{generation.current++;setIdentity(null);setMessage("Password changed. Sign in with your new password.");try{clearCounterDrafts();}catch{/* Session already revoked. */}}}/> : <>
+        {identity.roles.includes("owner") && <Link className="mt-5 block underline" href="/employee/team">Team & accounts</Link>}
+        {identity.roles.some(role => ["owner","delivery","supervisor"].includes(role)) && <Link className="mt-5 block underline" href="/employee/delivery">Delivery & recovery</Link>}
+        {identity.roles.some(role => ["owner", "preparation", "supervisor"].includes(role)) && <Link className="mt-5 block underline" href="/employee/preparation">Preparation queue</Link>}
         {identity.roles.some(role => role === "owner" || role === "preparation") && <Link className="mt-5 block underline" href="/employee/menu">Manage menu & locations</Link>}
+        <Link className="mt-5 block underline" href="/employee/password">Change password</Link></>}
         <button className="mt-6 min-h-12 rounded-md bg-[#17304b] px-6 text-white" disabled={busy} onClick={() => { void signOut(); }}>Sign out</button>
       </section> :
       <form onSubmit={signIn} className="mt-8 space-y-5">

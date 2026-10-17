@@ -1,0 +1,10 @@
+export const operationTabs=["ready","mine","active","review","closed"] as const;
+export type OperationTab=typeof operationTabs[number];
+export type OperationOrder={id:string;reference:string;customerName:string;phone:string|null;destination:string;originalDestination:string;state:string;version:number;
+ preparationAssigneeId:string|null;deliveryAssigneeId:string|null;deliveryAssigneeName:string|null;heldState:string|null;reason:string|null;incident:string|null;contactAttempt:string|null;
+ collectedAt:string|null;arrivedAt:string|null;returnedAt:string|null;createdAt:string;items:{name:string;nameEn:string|null;quantity:number}[]};
+export type OperationView={employee:{id:string;name:string;canDeliver:boolean;canManage:boolean};orders:OperationOrder[];next:string|null;
+ service:{paused:boolean;deliveryPaused:boolean;deliveryReason:string|null;version:number};counts:Record<OperationTab,number>;
+ assignees:{id:string;name:string;roles:string[]}[];courts:{id:string;name:string}[]};
+export type OperationAction="claim"|"collect"|"arrive"|"hold"|"contact"|"return"|"resume"|"reassign"|"cancel"|"correct"|"unpaid_handover"|"pause_delivery"|"resume_delivery";
+export type OperationInput={id:string;kind:OperationAction;version:number;orderId?:string;reason?:string;physicalCheck?:string;targetId?:string;locationId?:string;incident?:"other"|"absent"|"refused";contactAttempt?:string};

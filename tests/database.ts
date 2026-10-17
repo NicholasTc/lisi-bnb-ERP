@@ -13,9 +13,10 @@ export async function resetTestData(pool: Pool) {
   try {
     await client.query("BEGIN");
     // Deferred integrity checks see the complete isolated-test cleanup at commit.
-    for (const table of ["financial_event", "demo_inbox", "order_event", "refund", "payment_transaction", "order_item", "customer_order", "catalog_event", "location", "building", "product", '"user"', "verification", "rate_limit"]) {
+    for (const table of ["employee_command", "operation_command", "preparation_command", "court_service", "financial_event", "demo_inbox", "order_event", "refund", "payment_transaction", "order_item", "customer_order", "catalog_event", "location", "building", "product", '"user"', "verification", "rate_limit"]) {
       await client.query(`DELETE FROM ${table}`);
     }
+    await client.query("INSERT INTO court_service (id) VALUES (1)");
     await client.query("COMMIT");
   } catch (error) { await client.query("ROLLBACK"); throw error; }
   finally { client.release(); }

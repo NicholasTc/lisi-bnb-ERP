@@ -8,7 +8,7 @@ Current direction: [court-first/manual QRIS decision](decisions/004-court-first-
 - **MERCHANT EVIDENCE — OPEN:** Does the existing system show a stable transaction reference, actual amount and payment timestamp? What trusted evidence can link a particular payment to a particular order, including simultaneous equal-value orders and reused receipts?
 - **MERCHANT TIMING — OPEN:** Is confirmation immediate? How do staff distinguish successful, pending, missing and delayed transactions? What happens at court when records cannot be checked?
 - **IMPLEMENTATION BLOCK:** Do not implement payment verification until the above capabilities and the authorized checking procedure are confirmed. No unrestricted mark-paid action or simulated production evidence. Full payment/handover acceptance and real-customer use remain gated.
-- **COURT OPERATIONS — OPEN:** No automatic cancellation and immediate unpaid preparation eligibility are now confirmed in decision 005. Staff aging/escalation thresholds, suspicious-order review procedures, production quantities/abuse limits, post-claim cancellation/loss disposition, contact attempts, wrong-court corrections, returned drinks and pause effects on queued/preparing/delivering orders. Supervisor/owner authority is approved; operational grounds and procedures are not all settled.
+- **COURT OPERATIONS — OPEN:** Production capacity/abuse limits, staff aging/escalation targets, detailed contact waiting times and real-device usability/background/sound acceptance. [Decisions 006](decisions/006-preparation.md) and [007](decisions/007-delivery-and-team.md) settle task roles, physical-stage recovery, reasoned holds/cancellations/unpaid handover, contact/return records, active-court correction, and persistent preparation/delivery pause effects. Returned retries must be collected again. Local 5-second polling/15-second stale blocking remain test defaults.
 - **FINANCIAL PROCEDURES — OPEN:** Verifier role matrix; manual mismatch/extra/late payment handling; correction of erroneous confirmations; full-refund execution/evidence and unknown results; merchant reconciliation ownership/frequency; exact paid-order/best-seller/cancellation report definitions. Do not invent fields or merchant support.
 - **PHASE 2 — DEFERRED:** Counter-created delivery payment timing, customer/counter pickup and dine-in payment/handoff rules. The earlier answer “yes” did not select among those alternatives; the owner subsequently confirmed deciding these in Phase 2.
 
@@ -16,12 +16,12 @@ Confirmed exception permissions, pre-claim customer cancellation and app-style b
 
 ## Before production use
 
-- Secure first-owner provisioning and employee account lifecycle; no production provisioning command exists in Milestone 1.
+- Secure first-owner provisioning and production enablement of the reviewed account lifecycle; current Team/password administration remains non-production. Existing development provisioning is not a production bootstrap tool.
 - Password recovery/delivery and owner/supervisor MFA policy.
 - Hosting, trusted proxy/client-IP handling, HTTPS, secret rotation, backups and demonstrated recovery targets.
 - Separate least-privilege production runtime and migration database credentials; local database owners are not a production permission design.
 - Production throttling tuning and retention/cleanup of expired sessions/rate-limit records.
-- Remaining operational permission matrix; Milestone 3 adds explicit counter entry/own-unpaid cancellation and owner/supervisor review/demo controls. Preparation/delivery execution and account-management UI remain later milestones.
+- Remaining payment/Phase 2 permissions. V2-3 implements owner Team management, temporary-password setup and immediate administrative session revocation under decision 007. Existing supervisor/counter roles are retained; no role removal or separate developer bypass was approved. Production password recovery/invitation delivery and bootstrap remain unresolved.
 
 Remaining payment/order/location/reporting decisions remain in `DECISIONS.md` O01–O16, as revised by the v2 decision above. They are not silently resolved by the foundation.
 

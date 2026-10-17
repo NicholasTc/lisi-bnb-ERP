@@ -1,6 +1,6 @@
 # LISI BNB ERP — MVP v2 implementation milestones
 
-**Updated:** 2026-10-16. **Status:** V2-1 implementation approved on 2026-10-16 and implemented for local review; remaining milestones are proposed/not started. Automated evidence is in [VERIFICATION-V2-1.md](VERIFICATION-V2-1.md); owner acceptance remains pending. No production access/deployment approval.
+**Updated:** 2026-10-17. **Status:** V2-1/V2-2 accepted to proceed; V2-3 delivery/recovery/Team approved and implemented for local review. V2-4 onward are not started. Automated evidence is in [V2-1 verification](VERIFICATION-V2-1.md) and [V2-2 verification](VERIFICATION-V2-2.md), with current results in [V2-3 verification](VERIFICATION-V2-3.md); V2-3 owner acceptance remains pending. No production access/deployment approval.
 
 ## Direction and existing work
 
@@ -49,11 +49,11 @@ Historical Milestones 1–3 delivered the foundation, catalog and demo ordering.
 
 **Deliver:** Focused task list/detail screens with one clear next action; durable preparation ownership and history; approved preparation availability/pause behavior; polling/refresh, visual alerts, audible cues where browser permissions allow and stale/offline feedback. Visual/polling recovery remains available when sound is blocked or muted.
 
-**Dependencies/decisions:** V2-1 accepted. Approve preparation permissions, pause effects, notification freshness targets and item-unavailable handling before implementing them. Do not silently substitute drinks or partially fulfill orders.
+**Dependencies/decisions:** V2-1 accepted to proceed. Roles, pause effects and review holds approved; implemented rules are in [decision 006](decisions/006-preparation.md). Polling/stale settings are provisional local test defaults; production freshness/escalation targets remain open. Do not silently substitute drinks or partially fulfill orders.
 
 **Acceptance:** Two simultaneous claims have one winner; customer cancel versus claim has one valid outcome; only the current authorized assignee can progress work. Repeated ready actions/lost responses produce one transition. Missed sound, reload or reconnection does not lose the order. Paid status is unchanged by preparation; existing work stays visible during pauses. Test current-session/role denial and database rollback as well as successful preparation.
 
-**Likely affected areas:** preparation pages/components, a cohesive server operations module, protected operations APIs, task/audit schema/migrations and concurrency/browser tests.
+**Implementation:** preparation page/component and protected API, cohesive preparation service, migration 0007, guest progress and concurrency/browser tests. See [verification](VERIFICATION-V2-2.md). Accepted to proceed to V2-3; actual-device and full Phase 1 acceptance remain later gates.
 
 ### V2-3 — Delivery, supervised exceptions and employee controls
 
@@ -66,11 +66,11 @@ Historical Milestones 1–3 delivered the foundation, catalog and demo ordering.
 - Absent/refusing customer, wrong-court and returned-drink exception paths; approved delivery/service pauses. Preserve original destination history when authorized corrections are recorded.
 - Essential owner-controlled employee creation/role assignment/disabling, using the established authentication/session policy. Do not turn development-only provisioning into an unreviewed production tool.
 
-**Dependencies/decisions:** V2-2 accepted. Approve delivery/collection transitions, correction limits, contact attempts/return disposition, post-preparation cancellation grounds, pause rules and remaining role/account-provisioning permissions. Account bootstrap/recovery decisions must be reviewed before their affected production behavior.
+**Dependencies/decisions:** V2-2 accepted to proceed. The owner approved delivery stages/permissions, pauses, reasoned physical recovery, contact/return requirements, correction, unpaid exceptions and temporary-password first-login setup; returned retries require collection again. [Decision 007](decisions/007-delivery-and-team.md) is authoritative. Production owner bootstrap/password recovery and operational timing/escalation targets remain launch questions.
 
 **Acceptance:** One delivery claimant wins; old assignee actions fail after reassignment; repeated/offline updates cannot imply successful delivery. Unpaid handover requires supervisor/owner approval and remains an unpaid exception. Only approved roles can change employees, pause services or resolve exceptions; disabling immediately revokes access. Payment-verification workflow remains unimplemented while its merchant gate is open. Use non-production fixtures to test independent operations, not a paid-status shortcut.
 
-**Likely affected areas:** delivery/supervisor/account pages, operations/employee services and protected routes, audit/task schema/migrations and role/concurrency/browser tests.
+**Implementation:** `/employee/delivery`, `/employee/team`, mandatory password setup; operations/team/transactional authorization services, protected APIs, migrations 0008/0009 and concurrency/browser regressions. [Verification](VERIFICATION-V2-3.md) records local evidence and limits. No V2-4 authorization is implied.
 
 ### V2-4 — Official merchant review and manual QRIS verification
 

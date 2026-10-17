@@ -52,3 +52,11 @@ Before a separately approved court pilot: test browser closure, repeat submissio
 Actual merchant operational review and controlled real-money verification with owner approval are required; gateway sandbox/webhook integration is not an MVP gate. Labelled fixtures can test independent operations but cannot validate manual verification or establish fully tested court acceptance while the merchant block remains.
 
 The existing Milestone 3 signed demo inbox, financial transitions and crash-reconciliation tests remain historical evidence in `VERIFICATION-M3.md`. They prove no real merchant capabilities and do not validate the v2 workflow or B31 recovery targets. No new tests have been executed for this requirements-only update.
+
+## V2-2 implemented preparation safeguards
+
+[Decision 006](decisions/006-preparation.md) records atomic claim/ready/review commands, same-row guest-cancel races, persistent versioned new-order pauses and current-session/assignee checks. Queue polling never counts as activity; stale data disables task actions. Recovery retries the same command identity, and revoked access clears customer data from the task screen. Review never implies payment or cancellation. Production notification targets and merchant verification remain open; executed evidence belongs in [VERIFICATION-V2-2.md](VERIFICATION-V2-2.md).
+
+## V2-3 delivery/account safeguards
+
+[Decision 007](decisions/007-delivery-and-team.md) adds versioned physical checks and immutable before/after history for reassignment/correction/cancellation/unpaid handover. Former assignees fail after reassignment. Return must precede cancellation of collected work; an absent/refused incident requires recorded contact. Retried returned delivery requires collection again. Administrative role/status changes revoke sessions but never erase task ownership/history. Temporary credentials cannot access staff tools before password setup; password/flag/audit/session changes commit together. Normal payment/handover and production administration remain closed. Evidence: [V2-3 verification](VERIFICATION-V2-3.md).

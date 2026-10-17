@@ -24,7 +24,7 @@ export function Checkout() {
       const saved = readPending(draftKey); setPending(saved); setCart(readCart());
       if (saved) { setName(saved.customerName); setPhone(saved.phone ?? ""); setLocation(saved.locationId ?? ""); setConfirmed(saved.locationConfirmed); }
       else setLocation(data.qr.courtId ?? "");
-      setError(data.orderingEnabled ? "" : "ORDERING_UNAVAILABLE");
+      setError(!data.orderingEnabled ? "ORDERING_UNAVAILABLE" : data.orderingPaused ? "ORDERING_PAUSED" : "");
     } catch (error) { setError(error instanceof RequestError ? error.code : "NETWORK"); }
     finally { setLoading(false); }
   }, []);
@@ -72,6 +72,8 @@ export function Checkout() {
   return <OrderShell language={language} change={change}>
     <h1 className="order-title">{t.checkout}</h1><p className="order-lead">{t.checkoutIntro}</p>
     {error && <p className="menu-alert" role="alert">{errorText(error, t)}</p>}
+    {catalog?.orderingPaused && error !== "ORDERING_PAUSED" && <p className="menu-alert" role="status">{t.paused}</p>}
+    {catalog?.orderingPaused && <button type="button" className="menu-refresh" onClick={() => { void load(); }}>{language === "id" ? "Periksa pemesanan" : "Check ordering availability"}</button>}
     {loading ? <p role="status" className="menu-status">{t.loading}</p> : <form onSubmit={submit}>
       <fieldset disabled={!canEdit} className="checkout-layout">
         <section className="order-panel checkout-cart" aria-label={t.cart}><h2>{t.cart}</h2>
@@ -94,7 +96,7 @@ export function Checkout() {
         </section>}
       </fieldset>
       {pending && <p className="menu-alert" role="status">{t.pending}</p>}
-      {lines.length > 0 && <button className="menu-button menu-button-primary order-submit" disabled={busy || !catalog?.orderingEnabled || (!pending && !locations.length)}>{busy ? t.submitting : pending ? t.retry : t.place}</button>}
+      {lines.length > 0 && <button className="menu-button menu-button-primary order-submit" disabled={busy || !catalog?.orderingEnabled || (!pending && (!locations.length || catalog.orderingPaused))}>{busy ? t.submitting : pending ? t.retry : t.place}</button>}
       {!pending && (error === "PRICE_CHANGED" || error === "ITEM_UNAVAILABLE" || error === "LOCATION_UNAVAILABLE") && <button type="button" className="menu-refresh" onClick={() => { void reviewPrices(); }}>{t.refresh}</button>}
       <p className="order-hint order-checkout-foot">{t.noEdit}</p>
     </form>}

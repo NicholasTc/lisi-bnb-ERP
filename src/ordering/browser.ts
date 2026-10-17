@@ -30,7 +30,7 @@ export function clearPending(key: string, counter: boolean) { (counter ? session
 export function clearCounterDrafts() {
   for (let index = sessionStorage.length - 1; index >= 0; index--) {
     const key = sessionStorage.key(index);
-    if (key?.startsWith("lisi-pending-counter:") || key?.startsWith("lisi-demo-command:")) sessionStorage.removeItem(key);
+    if (key?.startsWith("lisi-pending-counter:") || key?.startsWith("lisi-demo-command:") || key?.startsWith("lisi-preparation-command:") || key?.startsWith("lisi-operation-command:")) sessionStorage.removeItem(key);
   }
   localStorage.removeItem(cartKey(true));
 }

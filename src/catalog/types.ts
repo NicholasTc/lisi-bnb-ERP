@@ -6,7 +6,7 @@ export type Building = { id: string; name: string; active: boolean; version: num
 export type Location = { id: string; buildingId: string; kind: "court" | "table"; name: string;
   tableNumber: number | null; active: boolean; version: number };
 export type PublicCatalog = {
-  orderingEnabled: boolean;
+  orderingEnabled: boolean; orderingPaused: boolean;
   products: Omit<Product, "active" | "version">[];
   locations: { id: string; kind: "court" | "table"; name: string; buildingName: string; tableNumber: number | null }[];
   qr: { status: "absent" | "valid" | "invalid"; courtId: string | null };

@@ -1,5 +1,5 @@
 export type ServiceMode = "court" | "pickup" | "dine_in";
-export type OrderState = "awaiting_preparation" | "awaiting_payment" | "queued_for_preparation" | "canceled" | "exception";
+export type OrderState = "awaiting_preparation" | "preparing" | "ready" | "delivery_claimed" | "out_for_delivery" | "awaiting_handover" | "unpaid_handover" | "awaiting_payment" | "queued_for_preparation" | "canceled" | "exception";
 export type CheckoutInput = {
   id: string; accessKey: string; customerName: string; phone: string | null; kind: ServiceMode; locationId: string | null;
   locationConfirmed: boolean;

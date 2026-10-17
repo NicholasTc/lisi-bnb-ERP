@@ -33,7 +33,7 @@ beforeEach(async () => {
 afterAll(async () => { await resetTestData(pool); await pool.end(); await getPool().end(); });
 describe("PostgreSQL catalog and directory", () => {
   it("starts empty and never invents a QR location", async () => {
-    expect(await publicCatalog(null)).toEqual({ orderingEnabled: true, products: [], locations: [], qr: { status: "absent", courtId: null } });
+    expect(await publicCatalog(null)).toEqual({ orderingEnabled: true, orderingPaused: false, products: [], locations: [], qr: { status: "absent", courtId: null } });
     expect((await publicCatalog("unknown")).qr.status).toBe("invalid");
   });
   it("persists bilingual products and only public fields, preserving unavailable items", async () => {

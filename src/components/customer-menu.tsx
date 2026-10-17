@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CourtArt } from "./court-art";
+import { orderCopy } from "../ordering/copy";
 import { copy } from "../catalog/copy";
 import { formatIdr, type Language, type PublicCatalog } from "../catalog/types";
 import { readCart, saveCart, rememberedOrders, recoveryPath, type CartLine } from "../ordering/browser";
@@ -119,6 +120,7 @@ export function CustomerMenu() {
       <section aria-label={t.menu}>
         <div className="menu-heading-row"><h2>{t.menu}</h2><button className="menu-refresh" disabled={loading || busy} onClick={() => { void refresh(); }}>{t.refresh}</button></div>
         {failed && <p className="menu-alert mb-5" role="alert">{t.offline}</p>}
+        {catalog?.orderingPaused && <p className="menu-alert" role="status">{orderCopy[language].paused}</p>}
         {loading ? <p className="menu-status" role="status">{t.loading}</p> : products.length ? <>
           <label className="menu-search"><span className="sr-only">{t.search}</span><input type="search" value={search} placeholder={t.searchPlaceholder} onChange={event => setSearch(event.target.value)} maxLength={120} /></label>
           <div className="menu-filters" role="group" aria-label={language === "id" ? "Kategori menu" : "Menu categories"}>

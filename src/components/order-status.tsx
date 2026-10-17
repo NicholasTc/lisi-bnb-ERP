@@ -12,16 +12,16 @@ export function OrderDetails({ order, language }: { order: OrderView; language: 
   const t = orderCopy[language];
   if (order.workflow === "court_test") return <>
     <section className="order-state-card" aria-live="polite">
-      <span className="order-status-icon" aria-hidden="true">{order.state === "awaiting_preparation" ? "✓" : "!"}</span>
+      <span className="order-status-icon" aria-hidden="true">{!(["exception", "canceled"].includes(order.state)) ? "✓" : "!"}</span>
       <h1 className="order-title">{t[order.state]}</h1>
-      <p>{order.state === "awaiting_preparation" ? t.courtSaved : order.state === "canceled" ? t.closed : t.reviewNote}</p>
+      <p>{order.state === "awaiting_preparation" ? t.courtSaved : order.state === "preparing" ? t.preparationNote : order.state === "ready" ? t.readyNote : order.state === "canceled" ? t.closed : t[`${order.state}Note`] ?? t.courtReview}</p>
       <p className="order-reference">{t.reference} <strong>{order.reference}</strong></p>
     </section>
     <section className="order-panel order-overview"><p className="order-hint">{t.deliverTo}</p><p className="order-destination">{order.destination}</p>
       <div className="order-total"><strong>{t.total}</strong><strong>{formatIdr(order.totalIdr)}</strong></div>
       <p className="order-hint">{t.inclusive}</p>
     </section>
-    {order.state === "awaiting_preparation" && <div className="order-pay-note"><strong>{t.courtQueued}</strong><p>{t.payAtDelivery}</p></div>}
+    <div className="order-pay-note"><strong>{t.unpaid}</strong><p>{order.state === "awaiting_preparation" ? t.courtQueued : t.payAtDeliveryNote}</p></div>
     <details className="order-details"><summary>{t.orderDetails} ({order.items.reduce((sum, item) => sum + item.quantity, 0)})</summary>
       {order.items.map(item => <div className="order-line" key={item.productId}><div><strong>{language === "en" ? item.nameEn || item.name : item.name}</strong><p>{item.quantity} × {formatIdr(item.unitPriceIdr)}</p></div><strong>{formatIdr(BigInt(item.quantity) * BigInt(item.unitPriceIdr))}</strong></div>)}
     </details>

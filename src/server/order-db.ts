@@ -11,6 +11,10 @@ export type OrderRow = {
   id: string; request_digest: string; access_hash: string; source: "guest" | "counter"; created_by: string | null;
   customer_name: string; phone: string | null; kind: ServiceMode; location_id: string | null; destination: string; total_idr: number;
   state: OrderState; reason: string | null; demo_transaction_id: string | null; public_reference: string | null; pickup_code: string | null;
+  operation_version:number; preparation_assignee_id:string|null; preparation_claimed_at:Date|null; preparation_ready_at:Date|null;
+  delivery_assignee_id:string|null; delivery_claimed_at:Date|null; collected_at:Date|null; arrived_at:Date|null;
+  held_state:string|null; incident:string|null; contact_attempt:string|null; returned_at:Date|null; unpaid_handover_at:Date|null;
+  effective_location_id:string|null; effective_destination:string|null;
   created_at: Date; expires_at: Date | null; access_expires_at: Date; evidence_mode: string;
 };
 export function requireDemo() {
