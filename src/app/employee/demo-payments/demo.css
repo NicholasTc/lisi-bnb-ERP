@@ -1,0 +1,11 @@
+.demo-order-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 20px; }
+.demo-order-button { text-align: left; background: white; border: 1px solid #b3c8de; border-radius: 10px; padding: 16px; display: grid; gap: 7px; cursor: pointer; min-width: 0; }
+.demo-order-button span { font-size: 12px; overflow-wrap: anywhere; }
+.demo-order-detail { border-top: 2px solid #b3c8de; margin-top: 30px; padding-top: 10px; }
+.demo-controls { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; }
+.demo-controls legend { font-weight: 700; margin-bottom: 15px; }
+.demo-reason { width: 100%; display: grid; gap: 7px; margin: 10px 0; }
+.demo-reason input { min-height: 46px; padding: 10px 12px; border: 1px solid #8caacb; background: white; border-radius: 8px; }
+.demo-refund { margin-top: 20px; border-top: 1px solid #c5d7eb; padding-top: 15px; }
+.demo-refund p { overflow-wrap: anywhere; font-size: 13px; margin-bottom: 12px; }
+@media (max-width:620px) { .demo-order-list { grid-template-columns: 1fr; } }

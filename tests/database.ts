@@ -9,12 +9,14 @@ export const testPool = () => {
 export async function resetTestData(pool: Pool) {
   if (readConfig().environment !== "test") throw new Error("Refusing non-test reset");
   await assertDatabaseEnvironment(pool);
-  await pool.query("DELETE FROM catalog_event");
-  await pool.query("DELETE FROM location");
-  await pool.query("DELETE FROM building");
-  await pool.query("DELETE FROM product");
-  // Delete disposable test fixtures only; preserve marker/migration history.
-  await pool.query('DELETE FROM "user"');
-  await pool.query("DELETE FROM verification");
-  await pool.query("DELETE FROM rate_limit");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    // Deferred integrity checks see the complete isolated-test cleanup at commit.
+    for (const table of ["financial_event", "demo_inbox", "order_event", "refund", "payment_transaction", "order_item", "customer_order", "catalog_event", "location", "building", "product", '"user"', "verification", "rate_limit"]) {
+      await client.query(`DELETE FROM ${table}`);
+    }
+    await client.query("COMMIT");
+  } catch (error) { await client.query("ROLLBACK"); throw error; }
+  finally { client.release(); }
 }

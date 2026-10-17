@@ -1,107 +1,53 @@
 # LISI BNB ERP — Workflows
 
-**Status:** Draft. Confirmed business behavior is distinguished from proposed mechanics and open rules.  
-**Updated:** 2026-10-14
+**Updated:** 2026-10-16. Current requirements: [MVP v2 decision](decisions/004-court-first-manual-qris.md). These workflows are requirements, not implemented/verified behavior. V1 demo behavior remains documented in `decisions/003-ordering-proposal.md` and `VERIFICATION-M3.md`.
 
-## 1. Actors and channels
+## 1. Court ordering — Phase 1
 
-- **Guest customer:** Orders on responsive website without account. Can arrive via court QR or café QR.
-- **Counter staff:** Designated employee enters walk-in orders; assignment of this permission to roles/accounts is **OPEN**.
-- **Preparation employee:** Sees verified paid orders, claims work, prepares, marks ready; can update product availability.
-- **Delivery employee:** Sees ready court orders, claims, collects and marks delivered.
-- **Supervisor:** Authorizes cancellations/refunds, manages service pauses, task reassignment and destination corrections; detailed limits remain **OPEN**.
-- **Owner:** Controls prices, accounts and financial reporting; authorizes cancellations/refunds and may release/reassign claimed work.
+1. Customer opens the court QR link; validate and preselect the building/court, allow correction and require confirmation.
+2. Customer browses in Bahasa Indonesia/English, chooses available drinks, reviews quantities/final inclusive total and enters name/court phone contact as previously required.
+3. Server checks authoritative prices, availability and destination. A price change requires review; a successful commit freezes the agreed snapshots.
+4. Only after commit, show a unique reference and clear order confirmation with “pay at delivery” messaging. Preserve safe retry after a lost response; never claim success without confirmation.
+5. Customer can reopen the private 24-hour status link. Order/reference number alone does not grant access. Losing the browser does not delete or stop a committed order.
+6. Customer may cancel only before preparation is claimed. Serialize claim/cancel conflicts. New order-aging/deadline policy remains OPEN; do not copy the 15-minute v1 demo payment deadline into this workflow.
 
-Multiple employees may have each role; multi-role accounts should be supported. A shared café device and employee smartphones are expected. **CONFIRMED:** Individual accounts and server-side authorization are required, including on shared devices. Foundation session expiry/revocation policy is approved in `decisions/001-foundation.md`. Milestone 2 menu/directory permissions and bilingual browsing are approved in `decisions/002-catalog.md`. Production account recovery/lifecycle and the remaining operational permission matrix remain **OPEN**.
+## 2. Preparation and delivery
 
-## 2. Customer ordering — confirmed business sequence
+1. An eligible submitted court order appears once in the durable preparation queue while unpaid. Detailed suspicious-order review rules remain OPEN.
+2. A preparation employee claims the task; exactly one employee owns it. Prepare and mark ready.
+3. Ready court orders appear in the shared delivery queue. A delivery employee claims, collects and takes the drinks and official merchant QRIS to the confirmed court.
+4. Customer pays at delivery. Before marking paid or ordinary handover, an authorized employee checks successful payment in trusted official merchant records.
+5. Record verified payment and actual handover with employee attribution/timestamps; normal completion requires both. Exact permitted transitions, verifier permissions and evidence must be approved before implementation.
 
-1. Customer scans a **court-specific ordering QR** or accesses the café ordering website.
-2. If opened via court QR, the building/court is preselected; customer may change it and explicitly confirms the final building/court. For pickup/dine-in, select the appropriate service mode; dine-in uses numbered tables.
-3. Customer views available products, selects items and quantities, reviews cart and total.
-4. Recheck availability at checkout and freeze agreed prices. Customer checks out as a guest and is shown QRIS payment; cash/EDC are deferred. Provider-specific mechanics and stock-out during pending payment are **OPEN**.
-5. System waits for **trusted verification of payment**. A screenshot, customer click, or redirect alone is not proof.
-6. After verified payment, an eligible order automatically becomes visible in preparation once. Canceled/expired orders require supervisor late-payment review, defaulting to refund. Already manually fulfilled orders are reconciled without releasing work again; this alone does not require a refund. Extra verified duplicate payments are refunded without duplicate fulfillment.
-7. Customer can access order status without requiring an account; exact lookup mechanism is **OPEN**.
+**Step 4 and its payment-verification workflow must not be implemented until the merchant operational review is complete.** Access, identifiers/amount/time fields and confirmation speed are unknown. No customer screenshot, employee assumption or generic mark-paid button substitutes for trusted records.
 
-**Do not** submit an unpaid order to preparation. **Do not** make order creation depend on the customer keeping the browser open after payment.
+**Required concurrency/recovery:** atomic claims, server-side role/assignee checks, idempotent updates, polling plus manual refresh, stale/offline feedback and retained audit. Only supervisors/owners release/reassign after checking physical progress; no automatic claim expiry. Previous assignees cannot continue acting after reassignment.
 
-## 3. Employee-entered counter order
+## 3. Exceptions, cancellation and refunds
 
-1. Authorized staff select pickup/dine-in/court delivery and enter items and location if relevant.
-2. System creates a traceable order and initiates an approved payment method.
-3. Only a trusted confirmation permits preparation.
-4. Order follows the same fulfillment and reporting rules as customer-created orders.
+- Customer cancellation ends at preparation claim, even if unpaid. Only supervisors/owners authorize cancellation after preparation, unpaid handover and external full refunds; actor/reason required.
+- Refused/failed payment or an absent customer becomes an employee-visible exception and is escalated. For absent customers retain the existing direction: attempt contact, record failed delivery and return to café; contact attempts, time limits and final disposition remain OPEN.
+- Prepared unpaid drinks and authorized unpaid handovers are retained as loss/exception records, not successful paid sales. Authority to approve an exception does not establish payment.
+- Preserve successful payment evidence for canceled orders, duplicate actual payments, mismatches and erroneous confirmations; do not silently change history or prepare twice. Matching/correction/reconciliation procedures remain OPEN pending merchant review.
+- Full refunds are executed outside this application in MVP v2; authorization is separate from proof of execution. Keep original payment, reason, approver and confirmed refund evidence. Unknown results stay pending for reconciliation; no blind repeat or implied refund success. Exact operational evidence remains OPEN.
+- Substitutions/partial fulfillment/partial refunds remain deferred. Post-payment unavailability requires supervisor/owner resolution through the retained full-refund/replacement-offer policy; do not automatically charge or create a replacement.
 
-**CONFIRMED:** QRIS-only MVP, including counter orders, conditional on trusted automatic verification. Cash/EDC are deferred. **OPEN:** Receipt handling, official verification evidence and outage-import permissions/checks. No unrestricted manual-paid control is approved.
+## 4. Employee and service controls
 
-## 4. Preparation — confirmed sequence
+Individual authenticated employees may hold multiple roles. No implicit role hierarchy. Retain owner menu/price/directory/account authority, preparation availability controls, supervisor/owner reassignment and financial exception authority. Approve the remaining verifier/task/pause/account-management matrix before implementation.
 
-1. An eligible **verified paid** order appears automatically once in the shared kitchen queue; canceled/expired or already manually fulfilled orders require exception handling rather than automatic release.
-2. Preparation employee claims the order.
-3. Employee prepares items and marks the order ready.
-4. Court delivery orders enter the shared delivery queue; pickup/dine-in orders enter the ready/handoff path.
+Queues must remain usable when notifications are missed or sound is blocked. Pauses must not hide existing orders; precise new-order/pending/active-work effects and wait-estimate permissions remain OPEN. Staff task views should show the next action in plain language, with advanced exception details disclosed only when needed.
 
-**CONFIRMED:** Exclusive task ownership is mandatory. Only supervisors/owners release or reassign claimed work after checking physical progress; no automatic claim expiry, and previous-assignee actions are rejected. Substitutions and partial fulfillment are deferred; if fulfillment becomes impossible after payment, a supervisor resolves it through a full refund and replacement-order offer. **PROPOSED MECHANISM:** Atomic claim enforcement. **OPEN:** Priority/timers, physical handoff checks, shift change, order edits and grounds/procedures for cancellation exceptions after preparation starts.
+## 5. Counter, pickup and dine-in — Phase 2
 
-## 5. Delivery — confirmed sequence
+Deferred until court Phase 1 is accepted and further development approved. Detailed counter-entered court delivery timing, customer/counter pickup/dine-in payment rules, role permissions and handoff are not settled by the earlier ambiguous “yes.” Preserve existing code/data and prior pickup-code/table requirements for review; do not silently place these services in the court-only release.
 
-1. A ready **court delivery** order appears in a shared delivery queue with building, sport/court and order identifier.
-2. A delivery employee claims it, collects it from the café and travels to the selected court.
-3. Employee marks delivered/completed.
+## 6. Outage and resumption
 
-**CONFIRMED:** For an absent customer, record failed delivery, attempt the agreed contact method and return to café; do not automatically mark delivered. Supervisors manage destination corrections; stage-specific limits remain **OPEN**. **PROPOSED:** Separate `ready`, `claimed_for_delivery`, `out_for_delivery`, `delivered` operational states. **OPEN:** Contact method/attempts, wrong-court procedure, proof of handoff, redelivery/refund resolution and batching.
+Use a supervisor-numbered manual log and official merchant tools. Retain B27's conservative acceptance rule: new outage orders require official payment verification; otherwise stop new orders and continue already verified work. Normal online court prepayment changes do not automatically relax outage rules.
 
-## 6. Pickup and dine-in — confirmed sequence
+After recovery, the designated supervisor matches manual/online orders and merchant evidence, resolves overlaps and physical-work discrepancies, and approves resumption. Imports must not re-release completed work or count collections twice. Log fields, cutover, permissions, reconciliation deadlines and degraded-verification handling remain OPEN. Recovery targets are in `RELIABILITY.md`; manual references alone do not restore complete order data.
 
-1. Preparation marks order ready.
-2. Order becomes visible for pickup/dine-in handoff rather than entering court delivery.
-3. Authorized staff confirm handoff/completion.
+## 7. State and implementation boundary
 
-**CONFIRMED:** Numbered dine-in tables and order-specific pickup codes. **OPEN:** Directory, code lifecycle/checks, customer-facing ready notifications, secure guest lookup/recovery and unattended ready orders.
-
-## 7. Busy periods and availability
-
-- Staff can pause services and adjust estimated wait times (**CONFIRMED**).
-- Preparation staff and owner can mark products available/unavailable (**CONFIRMED**).
-- **CONFIRMED:** Preparation staff control kitchen pauses; supervisors manage service pauses. Existing paid orders must not be canceled or hidden by a pause.
-- **OPEN:** Exact channel scope, pause effects on new carts/checkouts and pending payments, continued fulfillment during a service-specific pause, wait-estimate permissions/calculation and delivery-only pause. Decide before affected implementation.
-- **PROPOSED UI RULE:** Display an explicit service-unavailable message before checkout.
-
-## 8. Cancellations, refunds and exceptions
-
-- Paid cancellation/refund authorization: designated supervisor or owner (**CONFIRMED**). Unpaid cancellation is supported; detailed actor rules remain **OPEN**.
-- **CONFIRMED:** Unpaid orders may be canceled. Paid cancellations/refunds require supervisor/owner approval; full cancellation is normally allowed before preparation, with individual exception review afterward. Partial refunds are deferred. Unknown refund outcomes remain pending reconciliation before retry; never issue a second refund simply because a response was lost.
-- **CONFIRMED:** Late payments on canceled/expired orders require supervisor review, defaulting to refund rather than preparation. Refund the extra verified payment on duplicate payment. Post-payment unavailability requires supervisor full-refund resolution and a replacement-order offer; substitutions/partial fulfillment are deferred.
-- **OPEN:** Exact transitions, post-preparation exception grounds, refund capability/execution, refund vs void, concurrent refund limits, external merchant refunds, disputes, customer notification and replacement-order linkage. A replacement offer is not automatic creation or charging of a new order.
-- **REQUIRED AUDIT:** Preserve original financial history and record actor, reason, timestamp, original transaction and refund reference. Detailed record format remains a design decision.
-
-## 9. Outage and manual workflow
-
-1. Staff identify website/internet/payment-provider outage and stop relying on unavailable digital features.
-2. A designated supervisor numbers records in a separate **manual order log**; use existing official merchant payment tools.
-3. Verify payment in the merchant's trusted records; do not accept screenshots as sufficient proof.
-4. Accept new manual orders only when official merchant records can verify payment. Otherwise stop new orders and continue already verified work. Prepare/deliver manually under a documented procedure.
-5. After recovery, the designated supervisor resolves manual/online overlaps and discrepancies and approves return to online operation. Previously fulfilled manual work must not re-enter preparation or be double-counted.
-
-**OPEN:** Supervisor assignment, log fields/numbering format, device/paper availability, cutover when the server remains online, re-entry permissions/evidence checks, reconciliation deadline and resumption checks. Manual log is **not** an independently writable second live ERP database. B31 sets a one-hour digital recovery target and no permanent loss of paid-order details; recovery feasibility and measurement details remain to be validated.
-
-## 10. State model — design proposal, not finalized
-
-Payment and fulfillment must be tracked separately rather than conflated into one `status` field.
-
-- **Proposed MVP payment states:** `pending`, `verified_paid`, `expired`, `failed`, `refund_pending`, `refunded` (subject to provider capabilities). Partial refunds are deferred; any external financial exceptions must still remain auditable.
-- **Proposed fulfillment states:** `awaiting_payment`, `queued_for_preparation`, `preparing`, `ready`, `claimed_for_delivery`, `out_for_delivery`, `completed`, `canceled`, `exception` (some states apply only to delivery).
-- **Non-negotiable invariant:** No transition into active preparation unless trusted payment verification is recorded. No payment-verification exception or generic override is approved.
-
-The state machine, authorized transitions, concurrency rules and financial effects must be approved before coding.
-
-## 11. Demo payment path — confirmed B32, non-production only
-
-1. A developer/tester creates a demo order; the interface clearly identifies the environment and payment display as simulated and non-payable.
-2. Non-production controls exercise simulated pending, success, failure, expiration, delayed/missing/repeated/out-of-order events and refund outcomes. These are test scenarios, not an approval of provider-specific states or mechanics.
-3. Server-side simulated evidence passes through the shared order/payment processing rules, including amount/identity checks, idempotency, authorization and eligible queue release. A customer-controlled success display is not payment authority.
-4. Demo transactions and reports remain explicitly simulated in an isolated non-production environment. They cannot become production paid-order records, merchant-backed evidence or real sales history.
-5. After a merchant is selected, its integration supplies documented real payment evidence through the replaceable provider boundary. Validate capabilities, event authentication, reconciliation and refund behavior before real-money pilot use.
-
-Production refuses demo provider configuration/controls/evidence and never falls back to simulation when the real provider is missing or unavailable. The production payment prerequisite remains unchanged. The provider contract and concrete state mapping remain subject to technical design; demo results are not live integration acceptance.
+Track payment separately from preparation/delivery and exceptions. The v1 states and paid-before-queue database triggers are implemented history, not the v2 state specification. New transitions must support unpaid court preparation but require verified payment or an authorized unpaid exception for handover/completion; an exception never becomes a paid sale. Approve detailed states/aging and add new reviewed migrations before changing code. Existing simulator controls remain local test tools, not the normal v2 interface or a production verification method.

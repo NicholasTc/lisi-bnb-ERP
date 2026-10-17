@@ -18,10 +18,12 @@
     "test": "vitest run --project unit",
     "test:integration": "tsx scripts/run.ts integration",
     "test:e2e": "tsx scripts/run.ts e2e",
+    "test:dev": "tsx scripts/check-dev.ts",
     "db:generate": "tsx scripts/run.ts generate",
     "db:migrate": "tsx scripts/run.ts migrate",
     "db:migrate:test": "tsx scripts/run.ts migrate-test",
     "local:setup": "tsx scripts/setup-local.ts",
+    "demo:enable": "tsx scripts/enable-demo.ts",
     "employee:provision": "tsx scripts/run.ts provision",
     "employee:disable": "tsx scripts/run.ts disable"
   },

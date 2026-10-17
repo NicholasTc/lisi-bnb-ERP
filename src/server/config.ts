@@ -4,6 +4,8 @@ export interface AppConfig {
   databaseUrl: string;
   authSecret: string;
   origin: string;
+  paymentsMode: "disabled" | "demo";
+  demoSecret?: string;
 }
 
 export function assertLocalDatabase(urlString: string, environment: "development" | "test") {
@@ -23,9 +25,13 @@ export function readConfig(source: Readonly<Record<string, string | undefined>> 
   if (environment !== "development" && environment !== "test" && environment !== "production") {
     throw new Error("APP_ENV must be explicit");
   }
-  if (source.PAYMENTS_MODE !== "disabled" ||
+  const paymentsMode = source.PAYMENTS_MODE;
+  if ((paymentsMode !== "disabled" && paymentsMode !== "demo") ||
       Object.keys(source).some(key => /^(PAYMENT_|PAYMENTS_|QRIS_)/.test(key) && key !== "PAYMENTS_MODE" && source[key])) {
-    throw new Error("Payment integration is disabled in Milestone 1");
+    throw new Error("Real payment integration is unavailable");
+  }
+  if (paymentsMode === "demo" && (environment === "production" || !source.DEMO_PAYMENT_SECRET || source.DEMO_PAYMENT_SECRET.length < 32 || /[<>]/.test(source.DEMO_PAYMENT_SECRET))) {
+    throw new Error("Demo payments require isolated non-production configuration and a signing secret");
   }
   const databaseUrl = source.DATABASE_URL;
   const authSecret = source.BETTER_AUTH_SECRET;
@@ -52,5 +58,5 @@ export function readConfig(source: Readonly<Record<string, string | undefined>> 
       throw new Error("Production requires HTTPS and a separate encrypted database connection");
     }
   }
-  return { environment, databaseUrl, authSecret, origin: origin.origin };
+  return { environment, databaseUrl, authSecret, origin: origin.origin, paymentsMode, demoSecret: source.DEMO_PAYMENT_SECRET };
 }

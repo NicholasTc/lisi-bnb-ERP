@@ -5,7 +5,8 @@ import { readConfig } from "../src/server/config";
 
 const action = process.argv[2];
 const commands: Record<string, { test?: boolean; command: string[] }> = {
-  dev: { command: ["next", "dev", "--hostname", "127.0.0.1", "--port", "3000"] },
+  // Avoid the reproduced Turbopack restart/hash-mismatch loop on the local dev server.
+  dev: { command: ["next", "dev", "--webpack", "--hostname", "127.0.0.1", "--port", "3000"] },
   start: { command: ["next", "start", "--hostname", "127.0.0.1", "--port", "3000"] },
   integration: { test: true, command: ["vitest", "run", "--project", "integration"] },
   e2e: { test: true, command: ["playwright", "test"] },

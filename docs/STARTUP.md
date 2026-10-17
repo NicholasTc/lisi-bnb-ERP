@@ -3,5 +3,12 @@ cd "/Users/nicholaschan/Desktop/2026 Project/lisi-bnb-ERP"
 docker compose --env-file .local/docker.env up -d --wait
 npm run dev
 
+Employee account:
 email: nicholastc14@gmail.com
 password: Nico@1234567890
+
+Owner account:
+owner.test@example.invalid
+LisiTest-ApGyqCPIIIpPsnvz!
+
+

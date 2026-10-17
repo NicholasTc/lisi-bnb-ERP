@@ -33,7 +33,7 @@ test("empty bilingual customer menu without invented products or checkout", asyn
   await page.goto("/");
   await expect(page.getByText("Menu belum tersedia.", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "EN", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Take a break. Make it a tasty one." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Good drinks. Better breaks." })).toBeVisible();
   await expect(page.getByText("The menu is not available yet.", { exact: false })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Today's menu" })).toBeVisible();
@@ -100,6 +100,7 @@ test("owner manages an initially empty building/court/table directory", async ({
 test("court QR preselection requires confirmation and allows validated override", async ({ page }) => {
   const { court, second } = await seedCourts();
   await page.goto(`/?court=${court}`);
+  await page.getByRole("button", { name: "Ubah", exact: true }).click();
   await expect(page.getByRole("combobox", { name: "Pilih lapangan" })).toHaveValue(court);
   await expect(page.getByText("Lapangan dikonfirmasi", { exact: false })).toHaveCount(0);
   await page.getByRole("button", { name: "Konfirmasi lapangan" }).click();

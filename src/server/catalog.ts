@@ -7,6 +7,7 @@ import { requireEmployee } from "./employee";
 import { HttpError } from "./http";
 import { booleanField, checkKeys, idField, integerField, locationInput, productInput, textField } from "./catalog-input";
 import type { CatalogEntity, PublicCatalog } from "../catalog/types";
+import { readConfig } from "./config";
 
 export async function publicCatalog(court: string | null): Promise<PublicCatalog> {
   return getDb().transaction(async tx => {
@@ -20,7 +21,8 @@ export async function publicCatalog(court: string | null): Promise<PublicCatalog
       .where(and(eq(location.active, true), eq(building.active, true)))
       .orderBy(asc(building.name), asc(location.kind), asc(location.name), asc(location.id));
     const selected = court === null ? undefined : places.find(place => place.id === court && place.kind === "court");
-    return { products, locations: places as PublicCatalog["locations"],
+    const config = readConfig();
+    return { orderingEnabled: config.environment !== "production", products, locations: places as PublicCatalog["locations"],
       qr: { status: court === null ? "absent" : selected ? "valid" : "invalid", courtId: selected?.id ?? null } };
   }, { isolationLevel: "repeatable read", accessMode: "read only" });
 }

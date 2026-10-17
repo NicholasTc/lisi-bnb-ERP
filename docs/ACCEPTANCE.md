@@ -1,15 +1,51 @@
 # LISI BNB ERP — Acceptance Criteria and Launch Gates
 
-**Status:** Draft verification contract. Pass/fail criteria below include confirmed business requirements and proposed safety tests; detailed thresholds and expected edge-case policies remain OPEN.  
-**Updated:** 2026-10-14
+**Updated:** 2026-10-16. Current baseline: [MVP v2 decision](decisions/004-court-first-manual-qris.md) and [V2-1 decision](decisions/005-court-ordering.md). V2-1 automated evidence is in [VERIFICATION-V2-1.md](VERIFICATION-V2-1.md); owner UI acceptance remains pending. The complete Phase 1 gates below remain unaccepted, especially operational claims and merchant verification. No launch approval is implied.
 
-B23–B31 in `DECISIONS.md` are owner-approved defaults. Criteria below are verification requirements; open mechanisms/policies still need approval. Executed foundation evidence is recorded in `VERIFICATION.md`; later MVP workflows remain unverified.
+## Phase 1 — Court acceptance
 
-B32 approves demo-first payments in non-production while merchant selection is pending. Demo results can establish provider-independent behavior, but cannot pass real-provider or real-money pilot gates.
+### Ordering and interface
 
-## 1. Test strategy
+- [ ] Customer court ordering only; counter, pickup and dine-in are outside Phase 1 acceptance and absent from its ordinary customer flow. Preserve historical records.
+- [ ] Bahasa Indonesia/English mobile-first menu/cart, validated confirmed/overridden court, required name/contact, frozen inclusive integer-IDR snapshots and explicit price-change review work without registration.
+- [ ] Successful submission shows a unique reference only after durable commit. A double-click, concurrent retry or lost response after commit creates exactly one order and permits authoritative recovery; failed/uncertain requests never display false success.
+- [ ] Private guest access remains isolated and expires server-side after 24 hours; order/reference numbers alone do not authorize lookup. Required information remains after browser closure/application restart.
+- [ ] Bright professional app-style UI uses original branding, clear primary actions and progressive disclosure. Ordinary customer/staff paths expose no raw technical state names or simulator actions. Verify agreed target phone/desktop sizes, accessible labels/contrast/targets, and loading/empty/offline/error states with owner usability review.
 
-Every critical workflow requires automated tests where practical plus realistic device/staff exercises. Passing compilation or a happy-path demo is **not acceptance**. Evidence must include test results, observed outcomes, known issues and the approving person.
+### Employee operations and unpaid exceptions
+
+- [ ] An eligible court order appears once for preparation before payment; ready orders enter delivery once. B40 confirms immediate eligibility/no automatic cancellation. Approve staff aging/escalation and later task-state procedures before implementing them; the old universal 15-minute demo timeout does not apply.
+- [ ] Two simultaneous preparation/delivery claims produce exactly one assignee and a clear conflict for the other. Customer cancel versus preparation claim produces one permitted outcome; cancellation after claim is rejected for the customer.
+- [ ] Role/current-assignee checks reject unauthorized/direct API and former-assignee actions. Only supervisor/owner can reassign after a recorded physical check; no automatic claim expiry.
+- [ ] Notification failure/mute does not lose the order. Polling/reload recovers committed queue state; stale/offline status is visible. Lost-response retries cannot duplicate state changes or imply physical completion.
+- [ ] Only supervisors/owners approve unpaid handover, post-preparation cancellation and external full refunds with actor/reason audit. Prepared unpaid losses/handovers remain unpaid exceptions, never paid revenue. Approval is not proof of payment/refund execution.
+- [ ] Approved service pause behavior preserves visibility of existing work; failed delivery, wrong court and shift recovery follow approved procedures. Open timing/permission rules must be settled first.
+
+### Payment and financial acceptance — BLOCKED pending merchant review
+
+- [ ] Observe and document who can access official merchant records, which transaction/evidence fields actually exist, success/pending meanings and confirmation speed on employee devices. Approve the verification/matching and unavailable-record procedure. **Do not implement payment verification until this gate is resolved.**
+- [ ] After that approval/implementation, authorized staff can demonstrate official-record checks, record exact amount/method/verifier/payment and verification times, and establish payment only from trusted evidence. Customer screenshot/assertion alone fails. Manual attestation is clearly distinguished from automatic bank verification.
+- [ ] Matching tests use actual supported merchant evidence. Same-amount simultaneous orders, reused evidence, concurrent/repeated confirmations and lost responses cannot mark two orders paid from one transaction or duplicate funds. Do not invent merchant identifiers to make tests pass.
+- [ ] Ordinary handover/completion requires recorded verified payment and actual handover. An authorized unpaid exception is separately auditable and never changes payment to paid. Payment/handover race or device failure has a recoverable authoritative outcome under the approved procedure.
+- [ ] Late/extra/mismatched payments, erroneous confirmations and external refunds follow approved review/correction procedures, retaining original evidence. Unknown refund execution stays pending; no duplicate/excess refunds or false refund success.
+- [ ] Independent report totals across Asia/Jakarta midnight distinguish verified collections, confirmed refunds, outstanding unpaid amounts, unique paid orders, best sellers, cancellations and unpaid prepared exceptions. Settlement is separate; demo/test/manual-import overlaps cannot inflate real collections. Exact definitions approved first.
+
+### Safety, recovery and pilot
+
+- [ ] Existing foundation/auth/catalog regressions, current authorization/session checks, abuse protections, input/origin handling, migration reproducibility, PostgreSQL integrity/rollback tests and relevant type/lint/build/browser checks pass.
+- [ ] New migrations preserve employee/menu/location/order history. Old simulated orders/evidence stay labelled and cannot become real payments; no gateway, webhook or automated refund execution is enabled.
+- [ ] Production owner provisioning/account lifecycle, HTTPS, secrets, least-privilege database roles, target devices/capacity, monitoring and staff incident/reconciliation ownership are reviewed and validated before real-customer use.
+- [ ] Test merchant/system outage, numbered manual logging, online/manual overlap and supervised resumption without double counting or repeated fulfillment. No new outage orders when official verification is unavailable under retained B27.
+- [ ] Restore drill demonstrates B31's one-hour digital recovery target and no permanent loss of complete paid-order details, including items, prices, destination and physical/financial history after the backup point. Define timing boundaries and other-record RPOs first; merchant references alone do not reconstruct an order.
+- [ ] Staff can perform the approved merchant verification/refund/reconciliation procedure in controlled real-money validation with separate owner approval. No simulator or ordering-only test passes this gate. Court-only pilot and public launch each require approval and agreed limits/acceptance criteria.
+
+## Phase 2 — Deferred acceptance
+
+After Phase 1 acceptance and owner approval, define counter, pickup and dine-in payment timing, permissions and handoff before implementation; require their own failure/concurrency/financial acceptance and court regression checks. No gateway integration is required for this MVP; a proven manual merchant procedure is required for real-money court acceptance.
+
+## Historical Milestones 1–3 — v1 acceptance scopes
+
+The original gates below are preserved as history with their executed verification links. Their demo deadlines, automatic-payment/preparation requirements and counter/service scope do not override MVP v2. No historical passing result establishes that the revised court workflow works.
 
 ### Milestone 1 — Foundation gate (approved 2026-10-14)
 
@@ -34,111 +70,14 @@ This module-specific gate does not require resolving later order/menu/payment wo
 
 Executed evidence belongs in `VERIFICATION-M2.md`; passing this gate does not approve Milestone 3 or production use.
 
-### Gate A — Requirements readiness (before implementation of affected module)
-- [ ] Confirmed vs proposed vs open rules are explicitly recorded in `DECISIONS.md`.
-- [ ] Demo work may proceed with O01 open under B32, once its affected business rules are approved. Official capabilities and confirmation mechanism must be validated before implementing/testing the real-provider integration; demo success is not that evidence.
-- [ ] Order/payment state diagrams and authorized transitions approved.
-- [ ] Role/permission matrix, location directory, menu/price rules and exception policies approved.
-- [ ] No unresolved BLOCKER is silently implemented by assumption.
+### Milestone 3 — Demo ordering gate (approved 2026-10-15)
 
-### Gate B — Functional acceptance (staging)
+- Guest/counter checkout, all three destinations, bilingual cart/status, exact snapshot totals and explicit review after price changes work without customer registration.
+- Stable checkout retries create one order, including a lost response after commit; current employee roles/sessions and private guest links enforce isolation. Court confirmation and phone are required; order numbers/pickup codes cannot grant online access.
+- Only authenticated owners/supervisors can issue simulated payment/refund evidence. HMAC validation and a non-serializable server verification marker protect the shared financial engine; production refuses demo operations before database access.
+- Duplicate/out-of-order/mismatched events, canceled/expired success, stock/location changes, extra payments and simultaneous cancellation/success never duplicate eligibility or erase financial history.
+- Full refunds serialize per payment. Unknown outcomes stay pending; confirmed results cannot regress. Failed results alone allow a fresh authorized request.
+- Injected failure during financial persistence rolls back ledger/eligibility changes while retaining the durable demo inbox; reconciliation recovers once. PostgreSQL guards enforce snapshot totals, accepted primary payment and refund amounts.
+- Browser network-loss recovery, mobile layout, guest reopening, counter session expiry, migrations, source checks and foundation/catalog regressions pass. Demo tests do not validate merchant capture, real refunds or operational recovery targets.
 
-| ID | Scenario | Pass criterion |
-|---|---|---|
-| F01 | Scan court QR | Correct court preselected; customer can change it; final choice stored. |
-| F02 | Guest checkout | Order placed without creating customer account. |
-| F03 | Counter entry | Designated counter employee can create a QRIS order with individually traceable creator/service type; others cannot. |
-| F04 | Three service modes | Court delivery, pickup and dine-in take correct handoff paths. |
-| F05 | Payment pending/failed | Order never enters preparation queue without trusted verified payment. |
-| F06 | Verified payment | Eligible order appears **once** in shared preparation without manual approval; canceled/expired or already manually fulfilled orders do not auto-enter. |
-| F07 | Kitchen claim | Exactly one of two simultaneous claims succeeds. |
-| F08 | Ready court order | Appears in shared delivery queue with correct building/court. |
-| F09 | Delivery claim/complete | Authorized delivery staff can claim and complete; audit history retained. |
-| F10 | Pickup/dine-in | Ready pickup order uses its order-specific code; wrong-order code is rejected and completion cannot repeat. Dine-in stores a valid numbered table and uses handoff without court delivery. Detailed checks/code lifecycle remain OPEN. |
-| F11 | Product availability | Authorized preparation staff/owner can toggle; unavailable product cannot be newly ordered under approved rules. |
-| F12 | Service pause | Authorized staff can pause selected service(s), adjust wait estimates, and existing paid orders remain accessible. |
-| F13 | Staff permissions | Each role is denied unauthorized server-side actions, even via direct API requests. |
-| F14 | Refund/cancellation | Unpaid cancellation is supported; only supervisor/owner approves paid cancellation/refund. Full cancellation normally allowed before preparation; later exceptions require recorded individual review under approved grounds. Partial refunds are deferred; original history, reason and financial impact retained. |
-| F15 | Notifications | New orders update live queue with visual and audible cues; queue remains usable if sound unavailable. |
-| F16 | Owner dashboard | Asia/Jakarta midnight boundaries apply. Verified payments received, confirmed refunds issued and their difference agree with independent test totals and are separate from settlement. Unique paid-order count excludes duplicate payments. Remaining revenue/count/best-seller policies need approval. |
-| F17 | Responsive devices | Ordering and employee flows work on target smartphones and café device. |
-| F18 | MVP tenders | Customer/counter checkout offers QRIS only, with trusted automatic verification; cash/EDC and unrestricted manual-paid overrides are unavailable. Provider capability verified before pilot. |
-| F19 | Absent court customer | Failed delivery recorded, agreed contact method attempted and return-to-café recorded; order is not automatically completed. Test contact/return procedure once approved. |
-| F20 | Privileged actions and attribution | Approved B28 permissions enforced server-side; denied roles cannot change prices/accounts, pause services, reassign or correct destinations. Shared-device actions identify the individual employee. Full matrix/session behavior approved before execution. |
-| F21 | Demo checkout | Non-production order/payment screens and history clearly show simulated payments; payment display is non-payable. Simulated outcomes reach server-side shared order rules without creating actual charges or production records. |
-
-### Gate C — Reliability and security
-
-| ID | Scenario | Pass criterion |
-|---|---|---|
-| R01 | Repeated payment callback | No duplicate paid order, kitchen entry or revenue. |
-| R02 | Lost/delayed callback | Payment remains unverified until trusted evidence; reconciliation recovers verified payment and releases only eligible work, without duplicate fulfillment. |
-| R03 | Browser closes after payment | Order remains persisted and recoverable. |
-| R04 | Double checkout submission | No accidental duplicate charge/order from retried action. |
-| R05 | Two staff update same order | Conflicting transition rejected or safely resolved; no silent overwrite. |
-| R06 | Network interruption | Staff sees uncertainty/offline status and can safely retry without duplicate transition. |
-| R07 | Invalid role / unauthenticated action | Server rejects unauthorized access and financial operations. |
-| R08 | Price changes after checkout/sale | Frozen agreed prices and historical totals remain unchanged despite later menu edits; availability revalidated at checkout. Pending-payment stock-out outcome follows policy once approved. |
-| R09 | Refund/cancel history | Original transaction preserved; actor, reason and linked refund traceable. |
-| R10 | Secret handling | No live keys in client bundle, repository, screenshots or logs. |
-| R11 | Backup restore | Drill demonstrates safe digital recovery within one hour and no permanent loss of paid-order details, including items, quantities, amounts, destination and recorded work/financial events after the backup point. Resumption does not repeat fulfillment/refunds. Clock boundaries and other-record RPO approved before drill. |
-| R12 | Reporting reconciliation | Differences against merchant records are visible, not silently ignored. |
-| R13 | Manual outage and return | No new orders without official merchant verification; already verified work can continue. Designated supervisor numbers manual records, resolves overlap and approves online return. Test local outage with server still online and manually fulfilled order receiving late verification; no double-counting/release. |
-| R14 | Mock payments and fail-closed configuration | Production rejects demo configuration/controls and simulated payment evidence, including direct requests. Missing/invalid real-provider configuration leaves payments unavailable rather than enabling demo. Test records are absent from production financial reports. |
-| R15 | Late payment | Verified payment after cancellation/expiry remains traceable, routes to supervisor review with refund default and does not automatically restart preparation. |
-| R16 | Actual duplicate payment | Two distinct verified payments for one order produce one fulfillment/order count; extra payment is traceable and refunded with supervisor/owner authorization. Distinguish extra funds from a repeated notification. |
-| R17 | Refund timeout/concurrency | Simulate success with lost response and simultaneous refund requests. Unknown outcome stays pending until reconciled; no second refund or refund beyond verified refundable funds. Confirmed outcomes/evidence preserved. |
-| R18 | Reassignment/stale actor | Supervisor/owner records physical-progress check before release/reassignment; ordinary employee denied, no automatic expiry, previous-assignee transitions rejected. Device retry cannot duplicate work. |
-| R19 | Post-payment unavailability | Supervisor can resolve through full refund and replacement-order offer; original payment/order history retained. Substitution/partial fulfillment unavailable; replacement is not automatically created or charged. |
-| R20 | Verification and interrupted processing | Invalid authentication, amount/currency/order/transaction mismatch and invalid regressions never release work. Repeated/out-of-order events and crashes between payment persistence and queue visibility recover eligible paid work once. Use documented provider cases and independent assertions. |
-| R21 | Demo failure coverage | Demo can exercise pending/success/failure/expiry, delayed/missing/repeated/out-of-order events, mismatched amount/identity, duplicate payments and uncertain refund outcomes. Approved business outcomes, idempotency and server-side permissions are asserted; no actual funds move. |
-| R22 | Replaceable provider integration | A shared provider-independent suite exercises demo and the selected real adapter through the same business-rule boundary. Real-adapter tests use official authentication/capability evidence and provider sandbox/controlled live cases where permitted. Swapping integration does not require rewriting core order logic; provider-specific gaps remain visible until resolved. |
-
-### Gate D — Limited real-order pilot
-- [ ] All critical staging scenarios pass, including failure and recovery tests.
-- [ ] Payment provider, merchant account, production credentials and verified payment notifications work in controlled live transactions.
-- [ ] Real-adapter payment/reconciliation/refund tests pass; simulated payments and demo data cannot be used as pilot acceptance evidence or production transaction records.
-- [ ] Pilot boundaries, staff, schedule, traffic/volume limits, rollback trigger and incident owner documented.
-- [ ] Preparation and delivery employees trained on claim, handoff, wrong location, pause, failed payment and manual fallback.
-- [ ] Owner/supervisor trained on cancellations, refunds, discrepancies and reporting.
-- [ ] Monitoring, backup restore, manual runbook and reconciliation procedures exercised.
-- [ ] Pilot recovery drill demonstrates B31's one-hour digital recovery target and no permanent loss of paid-order details; timing boundaries, other-record RPO and recovery ownership approved. No assumption that merchant references alone reconstruct orders.
-- [ ] Real paid pilot orders reconcile to merchant transaction records and order history.
-- [ ] No unresolved critical payment, authorization, lost-order or double-fulfillment defects.
-
-### Gate E — Full public launch
-- [ ] Pilot results reviewed; critical incidents resolved and fixes retested.
-- [ ] Load/concurrency tests pass agreed peak volume and response-time targets (**targets OPEN**).
-- [ ] B31 recovery targets revalidated for launch conditions; other-record RPO, alert ownership, incident escalation and support coverage approved (**remaining details OPEN**).
-- [ ] Recovery and rollback procedures tested; staff trained and available.
-- [ ] Privacy, security and payment-provider requirements reviewed for actual operating jurisdiction.
-- [ ] Owner explicitly approves launch based on documented evidence.
-
-## 2. Test data and reconciliation requirements
-
-For financial assertions, verify amounts from item-price snapshots, quantities, discounts, taxes/fees if applicable, verified payment references, refunds and the agreed reporting timezone/business-day boundary. Define expected totals independently of the implementation. Do not use the same calculation as both system-under-test and test oracle.
-
-For concurrency, test simultaneous employee claims and repeated payment notifications, not merely sequential clicks. For outages, test recovery with an unfinished paid order and an overlapping manual order to prove reconciliation works.
-
-For reporting, include payments/refunds across Asia/Jakarta midnight, actual extra payments, repeated notifications and overlapping manual records. Extra received funds remain traceable but do not create another sale/order. Remaining revenue, canceled/refunded-order count and best-seller rules require an independent approved oracle.
-
-For refunds and recovery, inject failures after external success but before local confirmation, and restore a backup predating known fulfillment/refunds. Compare complete records and physical-work evidence before resuming; financial references alone are insufficient.
-
-## 3. Explicitly not accepted as evidence
-
-- “The UI shows Paid” without merchant-backed verification.
-- A customer-submitted payment screenshot.
-- A happy-path demo without failure cases.
-- Successful compilation or passing unit tests alone.
-- An untested backup, an unmonitored background job or an unreviewed manual workaround.
-- An assumed payment provider integration or a promise that no failures can occur.
-
-## 4. Open numeric thresholds and operational criteria
-
-**Approved B31 target:** Digital recovery within one hour, with no permanent loss of paid-order details. Feasibility remains unverified. Timing boundaries and RPO for other records must be defined before pilot recovery testing.
-
-Before pilot/full launch, approve maximum order-to-kitchen delay, notification staleness threshold, peak orders per minute, acceptable availability, reconciliation frequency/deadline, backup frequency, refund resolution time and incident-response ownership. These remaining values are **OPEN**.
-
-## 5. Post-MVP features
-
-Advanced inventory and accounting are **not** prerequisites for the operational MVP or pilot. They require separate requirements, tests, migrations and acceptance gates after MVP stabilization. MVP must still retain correct historical product, order, payment, refund and audit records to support future expansion.
+Executed evidence belongs in `VERIFICATION-M3.md`. No Milestone 4 or production approval is implied.

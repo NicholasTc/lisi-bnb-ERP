@@ -47,7 +47,61 @@ export const employeeRole = pgTable("employee_role", {
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
 }, table => [primaryKey({ columns: [table.userId, table.role] }),
-  check("employee_role_known", sql`${table.role} IN ('preparation', 'delivery', 'supervisor', 'owner')`)]);
+  check("employee_role_known", sql`${table.role} IN ('preparation', 'delivery', 'supervisor', 'owner', 'counter')`)]);
+
+export const customerOrder = pgTable("customer_order", {
+  id: text("id").primaryKey(), requestDigest: text("request_digest").notNull(), accessHash: text("access_hash").notNull().unique(),
+  source: text("source").notNull(), createdBy: text("created_by").references(() => user.id, { onDelete: "restrict" }),
+  customerName: text("customer_name").notNull(), phone: text("phone"), kind: text("kind").notNull(),
+  locationId: text("location_id").references(() => location.id, { onDelete: "restrict" }), destination: text("destination").notNull(),
+  totalIdr: integer("total_idr").notNull(), currency: text("currency").notNull().default("IDR"),
+  evidenceMode: text("evidence_mode").notNull().default("demo"), state: text("state").notNull().default("awaiting_payment"), reason: text("reason"),
+  publicReference: text("public_reference").unique(), demoTransactionId: text("demo_transaction_id").unique(), pickupCode: text("pickup_code").unique(),
+  createdAt: time("created_at").notNull().defaultNow(), expiresAt: time("expires_at"), accessExpiresAt: time("access_expires_at").notNull(),
+}, t => [check("order_amount_valid", sql`${t.totalIdr} > 0 AND ${t.currency} = 'IDR' AND ${t.evidenceMode} IN ('demo','court_test')`),
+  check("order_source_valid", sql`(${t.source} = 'guest' AND ${t.createdBy} IS NULL) OR (${t.source} = 'counter' AND ${t.createdBy} IS NOT NULL)`),
+  check("order_contact_valid", sql`length(btrim(${t.customerName})) BETWEEN 1 AND 120 AND (${t.kind} <> 'court' OR (${t.phone} IS NOT NULL AND length(${t.phone}) BETWEEN 8 AND 30))`),
+  check("order_location_valid", sql`(${t.kind} = 'pickup' AND ${t.locationId} IS NULL AND ${t.pickupCode} IS NOT NULL) OR (${t.kind} IN ('court', 'dine_in') AND ${t.locationId} IS NOT NULL AND ${t.pickupCode} IS NULL)`),
+  check("order_state_valid", sql`(${t.evidenceMode} = 'demo' AND ${t.state} IN ('awaiting_payment','queued_for_preparation','canceled','exception')) OR (${t.evidenceMode} = 'court_test' AND ${t.state} IN ('awaiting_preparation','canceled','exception'))`),
+  check("court_workflow_valid", sql`(${t.evidenceMode} = 'demo' AND ${t.demoTransactionId} IS NOT NULL AND ${t.publicReference} IS NULL) OR (${t.evidenceMode} = 'court_test' AND ${t.source} = 'guest' AND ${t.kind} = 'court' AND ${t.demoTransactionId} IS NULL AND ${t.publicReference} IS NOT NULL AND ${t.publicReference} ~ '^LB-[A-F0-9]{10}$')`),
+  check("order_deadlines_valid", sql`((${t.evidenceMode} = 'demo' AND ${t.expiresAt} IS NOT NULL AND ${t.expiresAt} > ${t.createdAt} AND ${t.expiresAt} <= ${t.createdAt} + interval '15 minutes') OR (${t.evidenceMode} = 'court_test' AND ${t.expiresAt} IS NULL)) AND ${t.accessExpiresAt} > ${t.createdAt} AND ${t.accessExpiresAt} <= ${t.createdAt} + interval '24 hours'`),
+  index("order_created_idx").on(t.createdAt)]);
+export const orderItem = pgTable("order_item", {
+  orderId: text("order_id").notNull().references(() => customerOrder.id, { onDelete: "restrict" }),
+  productId: text("product_id").notNull().references(() => product.id, { onDelete: "restrict" }),
+  name: text("name").notNull(), nameEn: text("name_en"), description: text("description").notNull(), descriptionEn: text("description_en"),
+  quantity: integer("quantity").notNull(), unitPriceIdr: integer("unit_price_idr").notNull(),
+}, t => [primaryKey({ columns: [t.orderId, t.productId] }), check("order_item_amount_valid", sql`${t.quantity} BETWEEN 1 AND 99 AND ${t.unitPriceIdr} > 0`)]);
+export const paymentTransaction = pgTable("payment_transaction", {
+  id: text("id").primaryKey(), orderId: text("order_id").notNull().references(() => customerOrder.id, { onDelete: "restrict" }),
+  amountIdr: integer("amount_idr").notNull(), currency: text("currency").notNull().default("IDR"),
+  matched: boolean("matched").notNull(), primary: boolean("is_primary").notNull(),
+  createdAt: time("created_at").notNull().defaultNow(),
+}, t => [check("payment_amount_valid", sql`${t.amountIdr} > 0 AND ${t.currency} = 'IDR' AND (NOT ${t.primary} OR ${t.matched})`),
+  uniqueIndex("one_primary_payment").on(t.orderId).where(sql`${t.primary} = true`), index("payment_order_idx").on(t.orderId)]);
+export const refund = pgTable("refund", {
+  id: text("id").primaryKey(), orderId: text("order_id").notNull().references(() => customerOrder.id, { onDelete: "restrict" }),
+  paymentId: text("payment_id").notNull().references(() => paymentTransaction.id, { onDelete: "restrict" }),
+  amountIdr: integer("amount_idr").notNull(), state: text("state").notNull().default("pending"), reason: text("reason").notNull(),
+  actorId: text("actor_id").notNull().references(() => user.id, { onDelete: "restrict" }), createdAt: time("created_at").notNull().defaultNow(),
+}, t => [check("refund_amount_valid", sql`${t.amountIdr} > 0 AND length(btrim(${t.reason})) BETWEEN 1 AND 200`),
+  check("refund_state_valid", sql`${t.state} IN ('pending','succeeded','failed')`),
+  uniqueIndex("one_live_full_refund").on(t.paymentId).where(sql`${t.state} IN ('pending','succeeded')`)]);
+export const financialEvent = pgTable("financial_event", {
+  id: text("id").primaryKey(), orderId: text("order_id").notNull().references(() => customerOrder.id, { onDelete: "restrict" }),
+  digest: text("digest").notNull(), payload: jsonb("payload").notNull(), result: text("result").notNull(),
+  createdAt: time("created_at").notNull().defaultNow(),
+});
+export const demoInbox = pgTable("demo_inbox", {
+  id: text("id").primaryKey(), orderId: text("order_id").notNull().references(() => customerOrder.id, { onDelete: "restrict" }),
+  digest: text("digest").notNull(), payload: jsonb("payload").notNull(), signature: text("signature").notNull(),
+  actorId: text("actor_id").notNull().references(() => user.id, { onDelete: "restrict" }), createdAt: time("created_at").notNull().defaultNow(),
+});
+export const orderEvent = pgTable("order_event", {
+  id: text("id").primaryKey(), orderId: text("order_id").notNull().references(() => customerOrder.id, { onDelete: "restrict" }),
+  actorId: text("actor_id").references(() => user.id, { onDelete: "restrict" }),
+  kind: text("kind").notNull(), detail: text("detail").notNull(), createdAt: time("created_at").notNull().defaultNow(),
+});
 export const environmentMarker = pgTable("environment_marker", {
   id: integer("id").primaryKey(), environment: text("environment").notNull(),
 }, table => [check("single_environment", sql`${table.id} = 1`),

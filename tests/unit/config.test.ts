@@ -10,7 +10,7 @@ describe("environment isolation", () => {
     ["missing environment", { APP_ENV: undefined }],
     ["unknown environment", { APP_ENV: "staging" }],
     ["real payment mode", { PAYMENTS_MODE: "live" }],
-    ["demo mode in foundation", { PAYMENTS_MODE: "demo" }],
+    ["demo without a signing secret", { PAYMENTS_MODE: "demo" }],
     ["payment credential", { PAYMENT_SECRET: secret }],
     ["short auth secret", { BETTER_AUTH_SECRET: "invalid" }],
     ["template secret", { BETTER_AUTH_SECRET: "<generate-at-least-32-random-characters>" }],
@@ -32,5 +32,9 @@ describe("environment isolation", () => {
     expect(() => readConfig({ ...production, APP_ORIGIN: "http://erp.example.invalid" })).toThrow();
     expect(() => readConfig({ ...production, DATABASE_URL: production.DATABASE_URL.split("?")[0] })).toThrow();
     expect(() => readConfig({ ...production, DATABASE_URL: production.DATABASE_URL.replace("lisi_production", "lisi_test") })).toThrow();
+    expect(() => readConfig({ ...production, PAYMENTS_MODE: "demo", DEMO_PAYMENT_SECRET: secret })).toThrow();
+  });
+  it("permits explicitly configured demo only in an isolated non-production environment", () => {
+    expect(readConfig({ ...base, PAYMENTS_MODE: "demo", DEMO_PAYMENT_SECRET: secret }).paymentsMode).toBe("demo");
   });
 });

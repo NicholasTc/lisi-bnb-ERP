@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CourtArt } from "./court-art";
 import { copy } from "../catalog/copy";
 import { formatIdr, type Language, type PublicCatalog } from "../catalog/types";
+import { readCart, saveCart, rememberedOrders, recoveryPath, type CartLine } from "../ordering/browser";
 
 export function CustomerMenu() {
   const [language, setLanguage] = useState<Language>("id");
@@ -17,6 +18,9 @@ export function CustomerMenu() {
   const [locationError, setLocationError] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [storageError, setStorageError] = useState(false);
+  const [recent, setRecent] = useState<ReturnType<typeof rememberedOrders>>([]);
   const initial = useRef(true);
   const generation = useRef(0);
   const confirming = useRef(false);
@@ -32,19 +36,27 @@ export function CustomerMenu() {
       const data: PublicCatalog = await response.json();
       if (version !== generation.current) return;
       setCatalog(data); setFailed(false);
-      if (initial.current) { setSelected(data.qr.courtId ?? ""); initial.current = false; }
+      if (initial.current) { setSelected(data.qr.courtId ?? ""); setEditing(data.qr.status !== "valid"); initial.current = false; }
       if (data.qr.status === "invalid") { setConfirmed(false); setEditing(true); }
     } catch { if (version === generation.current) { setFailed(true); setConfirmed(false); } }
     finally { if (version === generation.current) setLoading(false); }
   }, []);
   useEffect(() => {
     const timer = setTimeout(() => {
+      setCart(readCart()); setRecent(rememberedOrders());
       try { if (localStorage.getItem("lisi-language") === "en") setLanguage("en"); } catch { /* Preference storage is optional. */ }
       void refresh();
     }, 0);
     const polling = setInterval(() => { void refresh(); }, 60_000);
     return () => { clearTimeout(timer); clearInterval(polling); invalidate(); };
   }, [refresh, invalidate]);
+  function addItem(item: PublicCatalog["products"][number]) {
+    const next = [...cart];
+    const index = next.findIndex(line => line.productId === item.id);
+    if (index >= 0) next[index] = { ...next[index], priceIdr: item.priceIdr, quantity: Math.min(99, next[index].quantity + 1) };
+    else if (next.length < 50) next.push({ productId: item.id, name: item.name, nameEn: item.nameEn, priceIdr: item.priceIdr, quantity: 1 });
+    try { saveCart(next); setCart(next); setStorageError(false); } catch { setStorageError(true); }
+  }
   function changeLanguage(value: Language) {
     setLanguage(value);
     try { localStorage.setItem("lisi-language", value); } catch { /* Browsing works without storage. */ }
@@ -80,13 +92,9 @@ export function CustomerMenu() {
             <button aria-pressed={language === "id"} onClick={() => changeLanguage("id")}>ID</button>
             <button aria-pressed={language === "en"} onClick={() => changeLanguage("en")}>EN</button>
           </div>
-          <Link href="/employee/sign-in" className="menu-staff-link">{t.staff}</Link>
+
         </div>
       </header>
-      <section className="menu-hero">
-        <div><h1>{t.title}</h1><p>{t.intro}</p></div>
-        <CourtArt />
-      </section>
       <section className="menu-location" aria-label={t.location}>
         <div className="menu-location-summary">
           <div><p className="menu-location-label">{t.location}</p><strong>{place ? `${place.buildingName} / ${place.name}` : t.noLocation}</strong>
@@ -104,6 +112,10 @@ export function CustomerMenu() {
         </form>}
         {locationError && <p className="menu-alert" role="alert">{t.locationError}</p>}
       </section>
+      <section className="menu-hero">
+        <div><h1>{t.title}</h1><p>{t.intro}</p></div>
+        <CourtArt />
+      </section>
       <section aria-label={t.menu}>
         <div className="menu-heading-row"><h2>{t.menu}</h2><button className="menu-refresh" disabled={loading || busy} onClick={() => { void refresh(); }}>{t.refresh}</button></div>
         {failed && <p className="menu-alert mb-5" role="alert">{t.offline}</p>}
@@ -119,12 +131,25 @@ export function CustomerMenu() {
             <div><h3>{language === "en" ? item.nameEn || item.name : item.name}</h3>
               {(item.description || item.descriptionEn) && <p>{language === "en" ? item.descriptionEn || item.description : item.description}</p>}
               {!item.available && <span className="menu-unavailable">{t.unavailable}</span>}
-            </div><strong className="menu-price">{formatIdr(item.priceIdr)}</strong>
+              <strong className="menu-price">{formatIdr(item.priceIdr)}</strong>
+            </div><div className="menu-item-order"><svg className="menu-drink-art" viewBox="0 0 110 100" fill="none" aria-hidden="true"><path d="M34 25h42l-5 60H39Z" fill="white" stroke="currentColor" strokeWidth="2.5"/><path d="M38 46h34l-3 35H41Z" fill="currentColor" opacity=".16"/><path d="m59 27 7-18h14M30 25h50" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><path d="m46 38 8 2-2 8-8-2Zm13 12 8-2 2 8-8 2Z" stroke="currentColor" strokeWidth="1.5"/></svg>
+              {catalog?.orderingEnabled && item.available && item.priceIdr > 0 && <button className="menu-add" aria-label={`${language === "id" ? "Tambah" : "Add"} ${language === "en" ? item.nameEn || item.name : item.name}`} disabled={cart.some(line => line.productId === item.id && line.quantity >= 99)} onClick={() => addItem(item)}>+ <span>{language === "id" ? "Tambah" : "Add"}</span></button>}
+            </div>
           </article>)}</div>
           {!visible.length && <p role="status" className="menu-status">{t.noMatches}</p>}
         </> : !failed && <p className="menu-status" role="status">{t.empty}</p>}
       </section>
-      <footer className="menu-footer"><p>{t.prices}</p><p>{t.preview}</p></footer>
+      {storageError && <p className="menu-alert" role="alert">{language === "id" ? "Penyimpanan browser diperlukan untuk menyimpan keranjang. Aktifkan lalu coba lagi." : "Browser storage is needed to keep your cart. Enable it and try again."}</p>}
+      {recent.length > 0 && <details className="menu-order-history"><summary>{language === "id" ? "Pesanan saya" : "My orders"}</summary><nav className="menu-recent" aria-label={language === "id" ? "Pesanan saya" : "My orders"}>
+        <h2>{language === "id" ? "Pesanan saya" : "My orders"}</h2>
+        {recent.map((value, index) => <Link key={value.id} href={recoveryPath(value.id, value.accessKey)} prefetch={false}>{language === "id" ? "Buka pesanan" : "Open order"} {index + 1}</Link>)}
+      </nav></details>}
+      <footer className="menu-footer"><p>{t.prices}</p><p>{catalog?.orderingEnabled ? t.test : t.preview}</p><Link href="/employee/sign-in" className="menu-staff-link">{t.staff}</Link></footer>
+      {catalog?.orderingEnabled && cart.length > 0 && <Link className="menu-cart-bar" href={`/checkout${selected ? `?court=${selected}` : ""}`}>
+        <span>{language === "id" ? "Lihat keranjang" : "View cart"} ({cart.reduce((sum, item) => sum + item.quantity, 0)})</span>
+        <strong>{formatIdr(cart.reduce((sum, item) => sum + BigInt(item.priceIdr) * BigInt(item.quantity), 0n))}</strong>
+      </Link>}
+      <p className="sr-only" role="status">{cart.reduce((sum, item) => sum + item.quantity, 0)} {language === "id" ? "item di keranjang" : "items in cart"}</p>
     </div>
   </main>;
 }

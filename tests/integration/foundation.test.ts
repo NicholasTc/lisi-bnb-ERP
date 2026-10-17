@@ -41,8 +41,8 @@ beforeEach(async () => {
 afterAll(async () => { await resetTestData(pool); await pool.end(); await getPool().end(); });
 
 describe("real PostgreSQL foundation", () => {
-  it("has applied all three migrations and is ready", async () => {
-    expect(Number((await pool.query("SELECT count(*) FROM drizzle.__drizzle_migrations")).rows[0].count)).toBe(3);
+  it("has applied all seven migrations and is ready", async () => {
+    expect(Number((await pool.query("SELECT count(*) FROM drizzle.__drizzle_migrations")).rows[0].count)).toBe(7);
     await expect(checkReadiness()).resolves.toBeUndefined();
   });
   it("uses a local database owner without cluster administration privileges", async () => {
@@ -73,9 +73,10 @@ describe("real PostgreSQL foundation", () => {
     expect((await pool.query('SELECT name FROM "user" WHERE id = $1', [employeeId])).rows[0].name).toBe("Test Employee");
   });
   it("refuses production provisioning/disabling before database access", async () => {
-    const saved = { APP_ENV: process.env.APP_ENV, APP_ORIGIN: process.env.APP_ORIGIN, DATABASE_URL: process.env.DATABASE_URL };
+    const saved = { APP_ENV: process.env.APP_ENV, APP_ORIGIN: process.env.APP_ORIGIN, DATABASE_URL: process.env.DATABASE_URL, PAYMENTS_MODE: process.env.PAYMENTS_MODE };
     try {
       process.env.APP_ENV = "production";
+      process.env.PAYMENTS_MODE = "disabled";
       process.env.APP_ORIGIN = "https://erp.example.invalid";
       process.env.DATABASE_URL = `postgresql://runtime:${password}@db.example.invalid/lisi_production?sslmode=verify-full`;
       await expect(provisionEmployee(pool, { email, name: "Blocked", password, roles: ["owner"] })).rejects.toThrow("Production provisioning");

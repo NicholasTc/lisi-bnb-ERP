@@ -1,7 +1,7 @@
 # LISI BNB ERP — Decision Register
 
 **Status:** Living register. Use this document to resolve ambiguity; do not interpret proposals as approvals.  
-**Updated:** 2026-10-14
+**Updated:** 2026-10-16
 
 ## Status meanings
 
@@ -10,21 +10,25 @@
 - **OPEN:** Needs a decision, evidence or business input.
 - **SUPERSEDED:** Replaced by a later explicit decision.
 
+## Current precedence — MVP v2
+
+B35–B39 and [the court-first/manual QRIS decision](decisions/004-court-first-manual-qris.md) supersede conflicting v1 payment/release rules. Phase 1 is customer court ordering; Phase 2 is counter/pickup/dine-in, with detailed rules deferred. V2-1 now adds local court checkout under B40; historical Milestone 3 demo data/services remain isolated. Payment-verification implementation is expressly blocked pending merchant review.
+
 ## Confirmed business decisions
 
 | ID | Status | Decision |
 |---|---|---|
 | B01 | CONFIRMED | One café and kitchen serving multiple padel/tennis buildings. |
-| B02 | CONFIRMED | Court delivery, café pickup and dine-in supported. |
-| B03 | CONFIRMED | Café counter supports both QR self-ordering and employee-entered orders. |
+| B02 | CONFIRMED, PHASED | Court delivery is Phase 1. Counter/pickup/dine-in are deferred to Phase 2 under B36; their detailed rules are not settled for v2. |
+| B03 | CONFIRMED, DEFERRED | Café counter QR self-ordering/employee-entered ordering remains a later direction; build and test court ordering first under B36. |
 | B04 | CONFIRMED | Court-specific QR preselects court; customer can override. |
 | B05 | CONFIRMED | Guest checkout; no customer account required. |
-| B06 | CONFIRMED | Payment is required **before preparation**; eligible paid orders enter kitchen automatically after trusted verification. B24 and B27 exclude late canceled/expired or already manually fulfilled work from automatic release. |
+| B06 | SUPERSEDED FOR COURTS | V1 required payment before preparation. B35 permits unpaid Phase 1 court preparation and requires official merchant payment verification before ordinary handover/completion. Phase 2 timing is deferred. |
 | B07 | CONFIRMED | Preparation and delivery are separate roles, with potentially multiple employees per role. |
 | B08 | CONFIRMED | Shared queues; employees claim their own preparation/delivery tasks. |
 | B09 | CONFIRMED | Ready court orders go to delivery queue; pickup/dine-in use ready/handoff flow. |
 | B10 | CONFIRMED | Staff can pause services and adjust wait estimates. |
-| B11 | CONFIRMED | Only supervisor and owner can authorize paid cancellations/refunds. B25 also supports unpaid cancellation; detailed unpaid actor rules remain OPEN. |
+| B11 | CONFIRMED, EXTENDED | Supervisor/owner authorizes paid cancellation/refunds; B37 adds unpaid handover and post-preparation cancellation authority and restricts guest cancellation to before preparation claim. |
 | B12 | CONFIRMED | Preparation staff and owner can change product availability. |
 | B13 | CONFIRMED | Owner dashboard: today's revenue, order count, best sellers, order history. |
 | B14 | CONFIRMED | Role-based permissions: preparation, delivery, supervisor, owner. |
@@ -36,7 +40,7 @@
 | B20 | CONFIRMED | Rollout: internal testing → limited real-order pilot → public launch. |
 | B21 | CONFIRMED | Launch requires verified payments, end-to-end tests, role security, recovery and staff training. |
 | B22 | CONFIRMED | **MVP first**, then advanced inventory and accounting after MVP testing/stabilization. |
-| B23 | CONFIRMED | MVP accepts QRIS only, including counter orders, conditional on trusted automatic verification. Cash/EDC are deferred. No provider selected. |
+| B23 | SUPERSEDED IN PART | QRIS-only remains; cash/EDC deferred. B35 replaces automatic verification/gateway dependency with trusted official merchant-record checks by authorized employees. The checking procedure is not yet known or implemented. |
 | B24 | CONFIRMED | Late payments for canceled/expired orders require supervisor review, with refund as the default rather than automatic preparation. Refund the extra verified payment on duplicate payment; never duplicate fulfillment. |
 | B25 | CONFIRMED | Unpaid orders may be canceled. Paid cancellations/refunds require supervisor/owner approval; full cancellation is normally allowed before preparation, and exceptions after preparation starts require individual review. Partial refunds are deferred. Uncertain refund results remain pending reconciliation before retry. |
 | B26 | CONFIRMED | Only supervisors/owners release or reassign claimed work, after checking physical progress. No automatic claim expiry; reject subsequent actions from the previous assignee. |
@@ -45,12 +49,27 @@
 | B29 | CONFIRMED | Recheck availability at checkout and freeze agreed prices. If fulfillment becomes impossible after payment, a supervisor resolves it through a full refund and replacement-order offer. Substitutions and partial fulfillment are deferred. |
 | B30 | CONFIRMED | Order-specific pickup codes, numbered dine-in tables and explicit building/court confirmation. For absent court customers, record failed delivery, attempt the agreed contact method and return to the café; do not automatically mark delivered. |
 | B31 | CONFIRMED | Reporting uses Asia/Jakarta midnight-to-midnight, showing verified payments received, confirmed refunds issued and their difference separately from settlement. Count unique paid orders, not duplicate payments. Recovery target: digital service within one hour, with no permanent loss of paid-order details; feasibility must be demonstrated in drills. |
-| B32 | CONFIRMED | Use a demo payment provider for non-production development/testing while merchant selection is pending. Keep provider integration replaceable without rewriting core order logic. Simulated evidence/data must be clearly distinguished and isolated from real transactions; demo mechanisms must be unavailable in production. Official provider integration and verification remain mandatory before a real-money pilot. |
+| B32 | SUPERSEDED IN PART | Existing non-production demo evidence/data remain labelled and isolated from real records; simulation is forbidden as production payment evidence. B35 removes mandatory gateway integration from this MVP; merchant operational proof is still mandatory before real-money acceptance. |
 | B33 | CONFIRMED | Milestone 2 uses one fixed final-inclusive integer-IDR price per item; variants/modifiers are deferred. Owner-only building/court/numbered-table management starts empty. Customer UI offers Bahasa Indonesia and English; actual menu/location content comes from the owner. |
+| B34 | HISTORICAL V1 APPROVAL | Milestone 3 demo implementation approval remains recorded in `decisions/003-ordering-proposal.md`. B35–B39 supersede conflicting court payment-first, expiry/cancellation and phase assumptions; unchanged exact-price/private-access/security requirements remain. |
+| B35 | CONFIRMED | MVP v2 uses existing official merchant QRIS with employee verification at court delivery; unpaid court preparation is allowed. Trusted official merchant evidence is required before paid status/ordinary handover. No gateway, webhooks or automated refunds in this MVP. |
+| B36 | CONFIRMED | Two main development phases: build/test customer court ordering first; counter, pickup and dine-in follow in Phase 2 with detailed rules decided then. Owner explicitly clarified the earlier ambiguous “yes.” |
+| B37 | CONFIRMED | Only supervisors/owners approve unpaid handover, cancellations after preparation and externally performed full refunds, with audit reasons. Unpaid exceptions are separate from paid sales; customers may cancel only before preparation is claimed. |
+| B38 | CONFIRMED | Bright, professional, intuitive mobile-first app-style UI, DoorDash-inspired ordering simplicity and original branding; avoid dense dashboard/test-control presentation in normal ordering and task flows. |
+| B39 | CONFIRMED BLOCK | Merchant staff access, stable transaction reference/amount/time availability and immediate confirmation are OPEN. Do not implement payment verification until official merchant capabilities and the staff procedure are confirmed. Requirements/independent development do not pass real payment/handover acceptance. |
+| B40 | CONFIRMED | V2-1 implementation approved on 2026-10-16: submitted court orders are immediately eligible for unpaid preparation; no automatic cancellation; older/suspicious orders remain for staff review/escalation. Pre-claim customer cancellation and 24-hour private access remain. Exact local implementation/boundaries: `decisions/005-court-ordering.md`. V2-2 and payment verification remain separate gates. |
+
+### Approval record — B35–B39 / MVP v2 (2026-10-16)
+
+Owner supplied the revised court/pay-at-delivery/manual-QRIS requirements, expressly required unknown merchant capabilities to stay OPEN and blocked payment-verification implementation. Owner approved the exception/cancellation defaults and UI direction, then clarified customer court ordering only first, with counter/pickup/dine-in deferred. This records the new requirements and staged plan; it is not authorization to implement blocked payment verification, deploy or use real customer funds. Original approvals below are history, subject to this supersession.
 
 ### Approval record — B33 / Milestone 2
 
 Product owner approved Milestone 2 menu/location implementation and explicitly confirmed pricing, directory permissions/empty start and both customer languages on 2026-10-14. See `decisions/002-catalog.md` for implementation choices and module acceptance. This settles O04/O05/O06 only for this module; ordering, payments, operational permissions and launch remain separate approvals.
+
+### Approval record — B34 / Milestone 3
+
+Product owner instructed proceeding on 2026-10-15 after the seven defaults, detailed state proposal and simple milestone outcome were presented. Approval covers the non-production ordering/demo module only. Merchant integration, post-preparation exceptions, physical handoff/service controls, real refunds and launch remain later decisions/gates. The proposal filename is retained to preserve existing links; its header records confirmed status.
 
 ### Approval record — B23–B31
 
@@ -68,20 +87,19 @@ Product owner approved Milestone 2 menu/location implementation and explicitly c
 - **Superseded/clarified:** P07's mock-provider proposal is now approved through B32. O01 remains a real-integration/pilot blocker, not a blocker for the approved demo path. B23's QRIS-only production scope is unchanged.
 - **Boundary:** This records demo-first requirements, not a technology/provider selection, application implementation authorization or a guarantee of zero later integration changes. Other module/business-rule blockers remain open.
 
-## Superseded decision
+## Superseded decisions
 
 | ID | Status | Prior decision | Superseded by |
 |---|---|---|---|
 | S01 | SUPERSEDED | Round 4 originally selected inventory and accounting in initial release. | B22: defer advanced inventory/accounting until after operational MVP is tested. |
 | S02 | SUPERSEDED | P07 proposed a mock payment provider in non-production only, with real verification before pilot. | B32 confirms demo-first development/testing and production separation. |
+| S03 | SUPERSEDED FOR PHASE 1 | B06 required payment before preparation for every order. | B35 permits unpaid court preparation; trusted verification is required before ordinary handover, with B37's unpaid exception path. |
+| S04 | SUPERSEDED FOR MVP V2 | B23/B32 made gateway/automatic payment verification mandatory before pilot. | B35/B39 require a proven official manual merchant procedure instead; payment verification implementation is blocked until operational review. |
+| S05 | SUPERSEDED FOR PHASE 1 | B34 demo payment expiry and cancellation while any order is unpaid. | B37 limits customer cancellation to pre-claim; new court aging/deadline rules remain OPEN. |
 
-## Payment concept: understood, not selected
+## Current payment direction — MVP v2
 
-- **CONFIRMED INTENT:** Customer scans an ordering QR and may see/save a **separate QRIS payment image** for payment using BCA/myBCA or similar.
-- **OPEN:** Whether merchant uses BCA Merchant, GoPay Merchant, GoMerchant or another service; whether dynamic QRIS/API and verified callbacks are available. No claim that any particular provider is supported or integrated.
-- **CONFIRMED:** Customer and counter MVP tenders are QRIS only (B23); cash/EDC are deferred. Outage orders require official merchant verification (B27).
-- **CONFIRMED:** Demo-first non-production testing is approved (B32). Demo payment displays must be marked simulated/non-payable, and demo success is not evidence of actual QRIS payment or provider support.
-- **OPEN:** Provider verification evidence, settlement, expiration mechanics, refund execution/capabilities, fees, payout delays and provider outages. ERP import/manual-confirmation permissions and evidence checks are not yet specified.
+Use existing official merchant QRIS and manual verification; no gateway integration, webhook or automated refund execution in this MVP. Do not assume the actual merchant product, staff access, evidence fields, confirmation speed or refund capabilities. O01/O03 and `OPEN_QUESTIONS.md` block payment-verification implementation. Customer screenshots alone are insufficient. Simulated records remain test-only and cannot establish real collections. Counter/pickup/dine-in timing will be decided in Phase 2.
 
 ## Technical foundation approval — 2026-10-14
 
@@ -106,25 +124,25 @@ This approval supersedes earlier documentation-only authorization boundaries for
 
 | Priority | ID | Question / required evidence |
 |---|---|---|
-| BLOCKER | O01 | Real integration/pilot gate: which official merchant/payment integration reliably verifies QRIS payments? Obtain documentation and merchant approval before real-provider implementation/testing. B32 permits provider-independent demo development without selecting a merchant; demo results do not resolve this gate. |
-| BLOCKER | O02 | B24–B26/B29 settle default exception policies. Approve exact states/transitions, late-payment review outcomes, post-preparation cancellation grounds, refund execution/unknown outcomes, and safeguards against excess concurrent refunds. |
-| BLOCKER | O03 | QRIS-only counter tender is settled by B23. Define provider evidence, receipt handling and authorized outage-import/payment-verification procedures; no unrestricted manual-paid control. |
+| BLOCKER | O01 | Before payment-verification implementation: confirm existing official merchant system, authorized employee/device access, stable reference/amount/payment-time availability, success/pending meaning and confirmation speed. Approve actual checking/matching/unavailable-record procedures. No gateway assumption; no real-money acceptance until proven. |
+| BLOCKER | O02 | B40 settles immediate unpaid preparation eligibility/no automatic cancellation and the minimal V2-1 state model. Approve later task/handover/payment transitions, staff aging/escalation thresholds, suspicious-order review and post-preparation exception grounds. V1 demo states/15-minute expiry do not settle these. B37 settles pre-claim guest cancellation and supervisor/owner exception authority. |
+| BLOCKER | O03 | After merchant review, define verifier permissions/evidence, simultaneous equal-value matching, reuse prevention, error corrections, receipt handling and external full-refund proof/unknown results. No generic mark-paid shortcut; payment verification implementation is blocked first. Phase 2 payment timing is deferred. |
 | BLOCKER | O04 | B33 approves owner-only directory management starting empty; B30 settles numbered tables, pickup codes and court confirmation. Supply real entries/QR placement, coverage and destination-correction limits by fulfillment stage before customer ordering. |
-| BLOCKER | O05 | B33 settles fixed final-inclusive prices and deferred variants/modifiers; B29 settles checkout revalidation and frozen agreed prices. Supply actual menu/prices; decide discounts, zero-price checkout, pending-payment availability and replacement-order handling. |
+| BLOCKER | O05 | B33/B34 settle fixed inclusive prices, deferred variants, no discounts/zero-price checkout and pending-order availability checks for Milestone 3. Supply real content/prices; replacement-order handling and future promotions remain separate decisions. |
 | BLOCKER | O06 | B28 settles permission direction and individual identity. Approve the complete matrix, counter permission assignment, wait-estimate permissions, owner/supervisor overlaps, session switching, revocation and account recovery. |
 | BLOCKER | O07 | B27 settles fallback limits and supervisor ownership. Finish ledger fields, cutover/overlap procedure, verified-payment evidence, import permissions, reconciliation deadline and resumption checks. |
-| BLOCKER | O08 | B31 settles timezone/day boundary and collection/refund displays. Define revenue terminology, best-seller rules and treatment of canceled/refunded orders. Distinguish actual extra payments from duplicate notifications: extra money is traceable, not another sale. |
+| BLOCKER | O08 | B31 retains Asia/Jakarta day boundaries and separate collection/refund/settlement displays. Define best sellers/counts, verified collection recognition, outstanding unpaid orders and prepared unpaid loss/exception reporting, canceled/refunded orders, corrections and merchant reconciliation ownership/frequency. No unpaid exception is a paid sale. |
 | BLOCKER | O09 | What are operational failure thresholds, notification fallback and staff escalation paths? |
 | BLOCKER | O10 | What security/privacy/retention/provider obligations apply to the business in Indonesia? |
 | HIGH | O11 | Design and validate recovery for B31's one-hour target and no permanent loss of paid-order details. Define other-record RPOs, timing boundaries, PostgreSQL backups and alert ownership; hosting remains unselected and Sheets optional. |
 | HIGH | O12 | Device/browser/network requirements, expected peak throughput and latency targets. |
-| BLOCKER | O13 | Secure guest order lookup/recovery, receipts and customer contact method; no customer account required. B30 pickup codes do not by themselves settle lookup authorization. |
-| BLOCKER | O14 | B26/B30 settle reassignment, no automatic expiry and absent-customer return. Define shift handoff, collection/completion checks, contact attempts, unattended orders and redelivery/refund resolution. |
-| BLOCKER | O15 | B29 defers substitutions/partial fulfillment and settles post-payment supervisor resolution. Define stock-out during pending payment, order-edit limits and replacement-order linkage. |
+| BLOCKER | O13 | B34 settles private 24-hour guest links and manual court phone contact in Milestone 3; pickup code/order number are not lookup credentials. Actual receipt/provider obligations, staff-assisted recovery identity checks and later delivery contact procedures remain open before their implementation/customer use. |
+| BLOCKER | O14 | B26/B30/B37 settle physical-check reassignment, no claim expiry, absent-customer return, exception authority and pre-claim guest cancellation. Define shift handoff, collection/normal versus exceptional completion, contact attempts, correction limits, drink disposition and redelivery resolution. |
+| BLOCKER | O15 | Recheck availability at checkout and preserve snapshots; no substitutions/partial fulfillment. Define v2 queued/preparing stock-out handling, service pause effects and replacement linkage. Do not inherit the old payment-acceptance availability timing for unpaid court preparation. |
 | LATER | O16 | Advanced inventory scope and accounting depth after MVP stabilization. |
 
 ## Decision process
 
-For each open issue record: decision, approver, date, reason, affected workflow/tests, and superseded decision (if any). A Codex agent must ask rather than fill in a BLOCKER with assumptions. Payment-provider selection is deferred during design, **not optional for real-money pilot or launch**.
+For each open issue record: decision, approver, date, reason, affected workflow/tests, and superseded decision (if any). A Codex agent must ask rather than fill in a BLOCKER with assumptions. MVP v2 does not require a gateway selection/integration. Confirming and proving the existing official merchant verification procedure is mandatory before payment-verification implementation and real-money acceptance.
 
-B32 permits the demo payment path while O01 remains open. It does not waive other affected-module requirements, nor permit simulated payments/data to be promoted into production financial records.
+B35–B39 permit requirements and independent court development to be planned while O01 remains open; they explicitly block implementing payment verification until merchant review. Existing demo data must never be promoted to real financial records. No fully tested court/payment or launch claim is valid while that gate is open.

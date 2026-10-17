@@ -1,105 +1,54 @@
 # LISI BNB ERP — Reliability and Recovery Requirements
 
-**Status:** Safety baseline and proposed controls; detailed mechanisms require technical design approval.  
-**Updated:** 2026-10-14
+**Updated:** 2026-10-16. Current baseline: [MVP v2 decision](decisions/004-court-first-manual-qris.md). Requirements and proposed safeguards are not evidence of working v2 behavior. Merchant-verification implementation remains explicitly blocked pending operational review.
 
-Owner-approved business defaults are recorded in `DECISIONS.md` B23–B31. Mechanisms and unresolved details remain subject to design; approval is not evidence that recovery or provider capabilities work.
+## 1. Invariants
 
-## 1. Reliability objective
+- Court preparation may start unpaid. Ordinary handover/completion requires payment verified against trusted official merchant records and actual handover. Only supervisors/owners authorize recorded unpaid handover exceptions; exceptions stay unpaid and never count as collected revenue.
+- Customer screenshots, redirects and assertions are not payment evidence. No assumption about merchant record access, identifiers/amount/time fields or immediate confirmation. Do not implement payment verification until these capabilities and staff procedures are confirmed.
+- Payment/fulfillment/refund/exception status are separate. Keep integer-IDR snapshots, auditable original history and attribution; never silently rewrite a financial error.
+- Committed orders remain durable and recoverable independently of browser/device state, including unpaid work in progress. Unique submission/action identities and transactional writes prevent retries from duplicating orders or funds.
+- Exactly one current assignee per preparation/delivery task. Only supervisors/owners release/reassign after checking physical progress; no automatic claim expiry and no former-assignee actions.
+- Customer cancellation is allowed only before preparation claim. Claim/cancel races have one permitted committed outcome; post-preparation cancellation, unpaid handover and external full refunds require supervisor/owner authorization and reason.
+- Menus/pauses do not silently change order snapshots or hide existing work. An unavailable item cannot be newly checked out; subsequent fulfillment problems require explicit exception handling.
+- Simulated evidence is labelled/isolated and never establishes real payment, refunds or sales. No production fallback to demo. No history deletion API.
+- One merchant payment must not be reused for multiple paid orders; specific matching/reuse prevention must be designed from actual merchant evidence. Unknown external refund outcomes require reconciliation before retry; no duplicate/excess refunds or false success.
+- Canceled or manually fulfilled orders must not re-enter preparation because a payment is recorded later. Preserve late/extra funds for authorized review without repeated fulfillment.
 
-This is a real-money, real-food ordering system. We cannot promise zero incidents. Design for **prevention, detection, containment, recovery and auditability**, especially when customers have paid. Redundancy must not create two competing sources of payment/order truth.
+## 2. Failure outcomes
 
-## 2. Non-negotiable invariants
+- **Lost response after checkout/action:** show uncertainty, recover authoritative state and retry the same operation. Never claim success before commit or create a new order merely because the first response was lost.
+- **Missed notification/muted device:** database-backed queues remain visible; polling/manual refresh recovers work, with a stale/offline indicator. Sound is supplementary. Queue-delay/escalation thresholds remain OPEN.
+- **Two employees act together:** atomic claims/transitions and current role/assignee checks reject conflicting actions. Log the winning transition; recover shift ownership through supervised physical checks.
+- **Fake/abandoned court order:** required name/confirmed court and existing contact help operations but do not authenticate a customer. Keep abuse protections; suspicious-order review, quantity limits and aging rules remain OPEN. Never automatically discard prepared work or mark it paid.
+- **Payment refused/failed, customer absent or wrong court:** record reason and escalate. Retain contact/return-to-café direction for absent customers; contact attempts, correction limits and final drink disposition remain OPEN. Prepared unpaid drinks remain loss/exception records, not sales or invented inventory valuations.
+- **Merchant confirmation missing/delayed/inaccessible:** no guessed paid status or ordinary completed handover. Verify actual merchant capabilities and approve the waiting/escalation procedure before implementation; unpaid exceptions do not replace that review gate.
+- **Same-value payments/reused receipt/erroneous confirmation:** require approved transaction-to-order matching and auditable corrections/reconciliation. The application can enforce entered-record consistency; without integration it cannot independently prove that an employee actually checked official records.
+- **Extra/late/mismatched actual payment:** retain evidence, separate funds from fulfillment, and route to supervisor/owner resolution. Extra funds never imply a second order. Exact manual matching/refund evidence remains OPEN.
+- **Refund performed externally with uncertain result:** distinguish approval/request from confirmed execution; reconcile before another refund. Keep payment/refund linkage and history. Automated refunds and partial refunds are deferred.
+- **Application/network/database failure:** stop unsafe writes, preserve uncertainty and reconcile recorded work/payment with physical progress before resumption. No in-memory queue or browser draft is the durable source of truth.
+- **Report differs from merchant:** show the discrepancy for investigation; do not overwrite history. Define reconciliation ownership/frequency and report formulas before implementation.
 
-1. **No unverified payment may trigger preparation.** Customer screenshots, redirects and self-reported success are insufficient.
-2. Every paid order must be durably identifiable and recoverable even if the browser closes or a worker/device crashes.
-3. A duplicate provider callback, retry or double-click must not create a second paid order or duplicate revenue.
-4. A single preparation/delivery task cannot be concurrently claimed by two employees.
-5. Order amount and item-price snapshots must not silently change when menu prices change later.
-6. Cancellation/refund authorization must be enforced server-side and leave an auditable record.
-7. Existing paid orders must not disappear when ordering is paused or products become unavailable.
-8. Manual orders and recovered online orders must not be counted twice.
-9. A report must distinguish payment verification, refund status and fulfillment status; fulfillment is not proof of settlement.
-10. Secrets, credentials and sensitive payment details must not be exposed in client code or logs.
-11. Reassignment requires supervisor/owner confirmation of physical progress; no automatic claim expiry. A previous assignee cannot continue changing the reassigned task.
-12. Canceled/expired or already manually fulfilled orders must not re-enter preparation merely because payment verification arrives later.
-13. Unknown refund outcomes require reconciliation before retry; concurrent actions must not create duplicate or excessive refunds.
+## 3. Data, security and technical safeguards
 
-## 3. Failure scenarios and required outcomes
+PostgreSQL remains authoritative. Use reviewed version-controlled migrations, constraints, explicit multi-step transactions, exact financial arithmetic, server-side input/permission checks and idempotent commands. V1 paid-before-preparation triggers must be revised through new migrations, not bypassed or removed without replacement. Retain existing test/demo records with their provenance.
 
-| Failure | Expected safe behavior | Detection / recovery |
-|---|---|---|
-| Payment succeeds; customer browser closes | Order remains recoverable; eligible orders reach kitchen once verified. | Provider verification + reconciliation; secure guest lookup remains OPEN. |
-| Payment callback delayed/lost | Do not guess payment; reconcile and release only if still eligible. Late canceled/expired payments require supervisor review, defaulting to refund. | Pending-payment aging alerts, periodic reconciliation; preserve late evidence. |
-| Payment callback repeated/out of order | Process idempotently; reject invalid regressions. | Deduplication keys, event audit. |
-| Customer pays twice | One fulfillment only; supervisor/owner-authorized refund of the extra verified payment. | Match distinct financial transactions; preserve both receipts and refund history. |
-| QR payment expires / payment fails | Keep order out of kitchen; show recoverable state. | Expiration/retry handling; exact policy OPEN. |
-| Two staff claim same task | At most one successful claim. | Atomic conditional update and conflict feedback. |
-| Claimed work is stale or employee changes shift | Supervisor/owner checks physical progress before release/reassignment; no automatic expiry. | Reject former-assignee actions; shift/handoff procedure OPEN. |
-| Staff loses connection during status update | No phantom success; reload authoritative status and retry safely. | Idempotent actions and state refresh. |
-| Notification sound fails/device muted | Order remains visible in queue; staff can refresh/check. | Visual indicator, heartbeat/staleness banner; escalation OPEN. |
-| Product sold out after cart created | Prevent invalid checkout or apply approved exception/refund flow. | Revalidate availability before accepting order. |
-| Fulfillment impossible after payment | Supervisor resolves through full refund and replacement-order offer; no substitution/partial fulfillment in MVP. | Retain paid-order details and linked refund; no automatic replacement charge. Pending-payment stock-out policy OPEN. |
-| Wrong delivery location / customer absent | Preserve order and flag exception. Supervisor manages location corrections. For absent customer, attempt agreed contact and return to café; do not auto-complete. | Contact method, correction limits and final redelivery/refund procedure OPEN. |
-| Refund issued after order recorded | Keep original sale and separate refund event; reporting adjusts correctly. | Reconciliation and audit trail. |
-| Refund request succeeds but response is lost | Keep result pending/unknown until reconciled; do not blindly issue another refund. | Operation/transaction linkage, safe retries and excess-refund prevention. Provider mechanism OPEN. |
-| App/network outage | Supervisor-numbered manual log and official merchant tools. Stop new orders if payment cannot be verified; continue already verified work. | Designated supervisor resolves overlap and approves online resumption; cutover details OPEN. |
-| Primary data store failure | Stop unsafe writes; recover complete paid-order details and reconcile financial/physical work before safe resumption. | Target digital recovery within one hour, no permanent loss of paid-order details; prove feasibility in restore drills. Other RPOs/measurement details OPEN. |
-| Google Sheets sync fails (if added) | ERP keeps working; Sheets clearly show stale last-sync time. | Retry, lag monitoring, reconciliation. |
-| Reporting disagrees with merchant | Do not silently overwrite; surface discrepancy for investigation. | Daily reconciliation report. |
+Use individual accounts, multiple explicit roles and the established session expiry/revocation rules. Finish verifier/task/pause/account-management permissions before those operations. Protect secrets/contact details and avoid raw request/payment-credential logging. Merchant access must follow actual authorized staff/device arrangements, not assumed shared credentials. Privacy/retention, production owner provisioning, MFA/recovery and trusted proxy/throttle configuration remain launch questions.
 
-## 4. Resilience mechanisms — design requirements, not stack choices
+UI must remain usable with failed connections and during busy service: clear next actions, readable status, duplicate-action protection, stale indicators and truthful pending results. A bright app-style design cannot hide payment uncertainty or make an exception look like a paid sale.
 
-### Payments and orders
-- Trusted provider-side payment verification, signed/authenticated notifications where supported, replay protection, and reconciliation.
-- Idempotency for checkout creation, payment callbacks, refunds and employee state changes.
-- Durable record of order/payment linkage and every meaningful state change.
-- Retriable background processing where needed; failed operations observable rather than silently dropped.
-- Never treat frontend confirmation as payment authority.
+## 4. Outage and restoration
 
-### Demo-first development and production separation — B32
-- A replaceable provider boundary separates provider-specific payment creation, event verification, status lookup/reconciliation and refund integration from core order rules. Its exact contract remains to be designed from business requirements and later checked against official provider capabilities.
-- Demo controls produce explicit simulated evidence server-side and exercise the same business-rule processing path, including retries and failure cases; they must not bypass payment/order integrity checks.
-- Demo displays/records are clearly labeled, payment displays are non-payable, and data is isolated from production transaction history and reporting. Simulated success is not verified merchant payment evidence.
-- Production rejects demo configuration, endpoints/controls and simulated evidence, including attempts through direct requests. Missing/invalid real-provider configuration disables payment acceptance; it cannot activate demo mode.
-- Use a common provider-independent test suite for demo and the eventual real adapter, plus provider-specific authentication/integration tests. Demo tests cannot validate actual QRIS, webhook authentication, refunds, settlement or merchant onboarding.
-- Real integration and controlled live verification remain pilot gates. Replaceability reduces coupling; it does not guarantee no later changes or remove provider integration/testing work.
+Retain B27: supervisor-numbered manual log plus existing merchant tools; new outage orders require official payment verification. If that verification is unavailable, stop new outage orders and continue already verified work until a different outage procedure is explicitly approved. Normal online unpaid court preparation does not silently change the outage policy.
 
-### Operations
-- Server-authoritative order state and atomic task claims.
-- Visual indicators plus audible alerts; no assumption that sound will always play.
-- Explicit stale/offline UI indication, safe retries and employee-visible exceptions.
-- Manual service pause and wait estimate controls with clear impact on new vs existing orders.
+Define cutover authority, paper/device log fields and numbering, staff ownership, physical/online overlap matching, import permissions, reconciliation deadlines and safe resumption. Imports must not duplicate revenue or re-prepare/handover work already performed. No automatic replay of physical tasks on recovery.
 
-### Data protection and recovery
-- Automated backups, restricted access, restore drills and documented recovery ownership.
-- **Approved target (B31):** Digital service recovery within one hour, with no permanent loss of paid-order details. This is a business target, not a validated architecture guarantee. Define measurement boundaries and RPO for other records before pilot; test recovery feasibility.
-- Merchant payment references alone cannot reconstruct lost items, quantities, locations or physical fulfillment. A restore drill must include complete paid-order records and events after the backup point, with prevention of repeated fulfillment/refunds before resumption.
-- Separate environments for development, staging and production; no mock payments in production.
-- Monitoring and alerts for payment verification delays, queue lag, order processing failures, synchronization and database health.
-- Google Sheets may later serve as a **read-only reporting mirror**; it is not an authoritative database or substitute for backups.
+**B31 target remains:** restore digital service within one hour with no permanent loss of paid-order details. This is a business objective, not validated architecture. Define timing boundaries, backup/restore ownership and other-record RPOs, including unpaid work in progress. Test backups/restoration with items, quantities, exact prices, court, assignees and financial/physical events after the backup point. Merchant references alone cannot rebuild complete orders. Google Sheets remains an optional read-only reporting mirror, not an operational database or backup substitute.
 
-### Security and audit
-- Least-privilege role checks enforced on the server.
-- Apply B28's permission direction and individual employee accounts on shared devices. Foundation session expiry/revocation is approved in `decisions/001-foundation.md`; full operational permissions, production account lifecycle and recovery procedures remain OPEN.
-- Protect credentials and personal information; minimize collection, define retention, and follow applicable Indonesian law and provider agreements.
-- Record actor, timestamp, before/after or event details for refund/cancellation, price/availability changes, location correction and inventory/accounting actions when added.
-- Avoid storing raw sensitive payment credentials.
+## 5. Release evidence and historical tests
 
-## 5. Manual fallback — mandatory runbook to finish before pilot
+Before a separately approved court pilot: test browser closure, repeat submission, simultaneous claims/cancel, assignee revocation, offline updates, missed alerts, wrong/absent customer, refusal, pauses, merchant-unavailable procedure, financial correction/external refund, manual overlap and backup restore. Set measurable staleness/latency/capacity/reconciliation/refund-resolution thresholds and train named incident owners. See `ACCEPTANCE.md`.
 
-**Confirmed direction (B27):** Separate supervisor-numbered manual log + existing merchant tools. Accept new manual orders only with official merchant payment verification; otherwise stop new orders and continue already verified work. A designated supervisor resolves overlaps and approves online resumption.
+Actual merchant operational review and controlled real-money verification with owner approval are required; gateway sandbox/webhook integration is not an MVP gate. Labelled fixtures can test independent operations but cannot validate manual verification or establish fully tested court acceptance while the merchant block remains.
 
-**Runbook details (OPEN until approved):** Named supervisor and outage-declaration authority; numbering format; fields (time, items, amount, service type, location, staff, merchant transaction reference, fulfillment); evidence checks; partial outage with server still accepting orders; physical fulfillment overlap; import permissions; reconciliation deadlines; discrepancy escalation; resumption checks.
-
-Never infer that a manual payment is verified merely because a customer presents a screenshot. If official merchant confirmation is unavailable, stop accepting new orders; no unverified-payment contingency is approved.
-
-## 6. Failure drills and release gating
-
-Before limited real-order pilot, demonstrate: delayed/duplicate payments, customer browser exit, concurrent staff claims, offline device during status change, wrong court, refund authorization, service pause, merchant outage, manual-order reconciliation, and backup restoration. Use actual payment-provider sandbox and controlled real-money validation where permitted. See `ACCEPTANCE.md`.
-
-Demo drills may exercise provider-independent behavior before merchant selection, but do not satisfy provider-specific or real-money release evidence. Repeat applicable payment tests against the selected real integration before pilot.
-
-## 7. Ownership and escalation — open
-
-Name an operational owner for payment discrepancies, kitchen queue incidents, delivery exceptions, infrastructure alerts, backup restoration and daily reconciliation. Define contact paths and response targets before pilot. Technical success is not enough without trained staff and a documented recovery procedure.
+The existing Milestone 3 signed demo inbox, financial transitions and crash-reconciliation tests remain historical evidence in `VERIFICATION-M3.md`. They prove no real merchant capabilities and do not validate the v2 workflow or B31 recovery targets. No new tests have been executed for this requirements-only update.

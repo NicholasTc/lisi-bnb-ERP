@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatIdr, type Building, type CatalogEntity, type Location, type Product, type StaffCatalog } from "../catalog/types";
+import { clearCounterDrafts } from "../ordering/browser";
 
 type Identity = { user: { name: string }; roles: string[] };
 type RecordValue = Product | Building | Location;
@@ -90,7 +91,7 @@ export function StaffCatalog() {
     setBusy(true);
     try {
       const response = await fetch("/api/auth/sign-out", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-      if (response.ok) window.location.assign("/employee/sign-in");
+      if (response.ok) { try { clearCounterDrafts(); } catch { /* Server session is already revoked. */ } window.location.assign("/employee/sign-in"); }
       else setMessage("Sign-out could not be confirmed. Retry before leaving this device.");
     } catch { setMessage("Sign-out could not be confirmed. Reconnect and retry before leaving this device."); }
     finally { setBusy(false); }

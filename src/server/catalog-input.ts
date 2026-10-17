@@ -25,7 +25,7 @@ export function idField(value: unknown) {
   if (typeof value !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
     throw new HttpError(400, "INVALID_ID");
   }
-  return value;
+  return value.toLowerCase();
 }
 export function checkKeys(input: Record<string, unknown>, allowed: readonly string[]) {
   if (Object.keys(input).some(key => !allowed.includes(key))) throw new HttpError(400, "INVALID_INPUT");

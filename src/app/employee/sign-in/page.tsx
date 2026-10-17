@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { clearCounterDrafts } from "@/ordering/browser";
 
 type Identity = { user: { name: string; email: string }; roles: string[] };
 export default function SignIn() {
@@ -57,7 +58,7 @@ export default function SignIn() {
     setBusy(true); setMessage("");
     try {
       const response = await fetch("/api/auth/sign-out", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-      if (response.ok) { generation.current++; setIdentity(null); }
+      if (response.ok) { generation.current++; setIdentity(null); try { clearCounterDrafts(); } catch { /* Server session is already revoked. */ } }
       else setMessage("Sign-out could not be confirmed. Retry before leaving this device.");
     } catch { setMessage("Sign-out could not be confirmed. Reconnect and retry before leaving this device."); }
     finally { setBusy(false); }
